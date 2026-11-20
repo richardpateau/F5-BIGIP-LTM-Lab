@@ -44,6 +44,7 @@ Secondary private IP configurations (`SNAT-1` at `172.16.0.10` and `SNAT-2` at `
 ![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-1.png)
 
 **Provisioning `SNAT-2` (`172.16.0.11`)**
+
 ![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-2.png)
 
 **Azure NIC IP Configurations Overview**
@@ -70,19 +71,26 @@ ltm virtual VS-NGINX-WEB {
     }
 }
 ```
+**GUI Auto Map Configuration**
 
-| GUI Auto Map Configuration | TMSH Virtual Server Baseline |
-|---|---|
-| ![SNAT Baseline GUI](screenshots/snat-baseline.png) | ![Baseline TMSH Virtual Server](screenshots/baseline-list-ltm-virtual.png) |
+![SNAT Baseline GUI](screenshots/snat-baseline.png)
+
+`list ltm virtual VS-NGINX-WEB`
+
+![Baseline TMSH Virtual Server](screenshots/baseline-list-ltm-virtual.png)
 
 ### Baseline Packet Capture Analysis (`snat.pcap`)
 Capturing traffic on the network interface confirms that under Auto Map:
 - Client `172.16.0.8` connects to VIP `172.16.0.7` on the client-facing segment.
 - BIG-IP translates the source address to Self-IP `172.16.0.4` when initiating connections to backend servers `172.16.0.5` and `172.16.0.6`.
 
-| Client to Virtual Server (`ip.addr == 172.16.0.7`) | Backend Auto Map Translation (`ip.addr == 172.16.0.4`) |
-|---|---|
-| ![Wireshark Baseline Client VIP](screenshots/wireshark-baseline-server-client.png) | ![Wireshark Baseline Server Auto Map](screenshots/wireshark-baseline-server-server.png) |
+**Client to Virtual Server (`ip.addr == 172.16.0.7`)**
+
+![Wireshark Baseline Client VIP](screenshots/wireshark-baseline-server-client.png)
+
+**Backend Auto Map Translation (`ip.addr == 172.16.0.4`)** 
+
+![Wireshark Baseline Server Auto Map](screenshots/wireshark-baseline-server-server.png)
 
 > **Engineering Constraint of Auto Map:** A single Self-IP provides approximately 64,511 usable ephemeral source ports. In high-throughput cloud environments with thousands of concurrent sessions, a single translation IP risks **SNAT Port Exhaustion**, resulting in dropped client connection handshakes.
 
@@ -109,9 +117,15 @@ ltm snatpool SNAT-POOL {
 }
 ```
 
-| Creating `SNAT-POOL` | Active SNAT Pool Overview |
-|---|---|
-| ![Creating SNAT Pool](screenshots/creating-snat-pool.png) | ![SNAT Pool Overview](screenshots/snat-pool-overview.png) |
+**Creating `SNAT-POOL`**
+
+![Creating SNAT Pool](screenshots/creating-snat-pool.png)
+
+**Active SNAT Pool Overview**
+
+![SNAT Pool Overview](screenshots/snat-pool-overview.png)
+
+**list ltm snatpool SNAT-POOL**
 
 ![TMSH SNAT Pool Member Verification](screenshots/list-ltm-snat-pool.png)
 
@@ -120,9 +134,13 @@ ltm snatpool SNAT-POOL {
 ### 2. Attaching `SNAT-POOL` to Virtual Servers
 The virtual servers (`VS-NGINX-WEB` and `VS-NGINX-HTTPS`) were updated from `Auto Map` to `SNAT`, specifying `SNAT-POOL`:
 
-| GUI SNAT Pool Assignment | TMSH Virtual Server Configuration |
-|---|---|
-| ![Assigning SNAT Pool to Virtual Server](screenshots/assigning-snat-pool.png) | ![Virtual Server Assigned SNAT Pool](screenshots/list-ltm-virtual.png) |
+**GUI SNAT Pool Assignment**
+
+![Assigning SNAT Pool to Virtual Server](screenshots/assigning-snat-pool.png)
+
+**TMSH Virtual Server Configuration CLI** 
+
+![Virtual Server Assigned SNAT Pool](screenshots/list-ltm-virtual.png)
 
 ---
 
@@ -132,18 +150,22 @@ Deep packet inspection of `snat-post-change.pcap` proves that BIG-IP now transla
 
 #### A. Translation Address `172.16.0.10` in Action (`ip.src == 172.16.0.10`)
 Requests routed to `NGINX-WEB01` (`172.16.0.5`) originate from translated source `172.16.0.10`:
+
 ![SNAT Pool Member 10 Active](screenshots/wireshark-post-change-filter-172.16.0.10.png)
 
 #### B. Translation Address `172.16.0.11` in Action (`ip.src == 172.16.0.11`)
 Requests routed to `NGINX-WEB02` (`172.16.0.6`) originate from translated source `172.16.0.11`:
+
 ![SNAT Pool Member 11 Active](screenshots/wireshark-post-change-filter-172.16.0.11.png)
 
 #### C. Multi-IP Bidirectional Translation (`ip.addr == 172.16.0.10 || ip.addr == 172.16.0.11`)
 Filtering for both SNAT IPs simultaneously proves concurrent load distribution across pool members and validates that backend servers return traffic directly to the translated IP:
+
 ![Dual SNAT IP Traffic](screenshots/wireshark-post-change-filter-172.16.0.11-and-10.png)
 
 #### D. Isolation of System Self-IP (`ip.src == 172.16.0.4`)
 Filtering for Self-IP `172.16.0.4` displays only 13 packets out of 844 (1.5%), strictly limited to administrative SSH and local health probes (`GET / HTTP/1.0`). **Application traffic has been 100% offloaded from the Self-IP to the SNAT pool:**
+
 ![Self-IP Strictly Isolated to Health Probes](screenshots/wireshark-post-change-filter-172.16.0.4.png)
 
 ---
@@ -157,6 +179,8 @@ While SNAT resolves routing, establishing a new backend TCP 3-way handshake and 
 - BIG-IP maintains a pool of pre-established, persistent TCP connections to backend pool members.
 - As new client HTTP requests arrive, BIG-IP multiplexes multiple client requests over existing idle backend connections using HTTP Keep-Alive.
 - **Synergy with SNAT:** Reusing backend TCP sessions significantly lowers the number of concurrent SNAT translation ports required on `172.16.0.10` and `172.16.0.11`.
+
+**Applying Oneconnect**
 
 ![Applying OneConnect Profile](screenshots/one-connect-applying.png)
 
@@ -199,25 +223,33 @@ With the default OneConnect profile enabled, connection pooling immediately redu
 
 ---
 
-#### 3. Parametric Stress Test A — Aggressive Retirement (`Maximum Reuse: 10`)
+#### 3. Test A — Aggressive Retirement (`Maximum Reuse: 10`)
 To empirically prove the connection reuse mechanism, a custom profile (`ONECONNECT-LAB`) was configured with `Maximum Reuse: 10` (retiring server-side TCP sockets after only 10 requests):
 
-| Profile Configuration (`Max Reuse: 10`) | Resulting Backend Sockets Explosion |
-|---|---|
-| ![OneConnect Max Reuse 10 Config](screenshots/test-oneconnect-max-reuse-10-config.png) | ![OneConnect Max Reuse 10 Results](screenshots/test-oneconnect-max-reuse-10-results.png) |
+**Profile Configuration (`Max Reuse: 10`)**
 
+![OneConnect Max Reuse 10 Config](screenshots/test-oneconnect-max-reuse-10-config.png)
+
+**Resulting Connection Details**
+
+![OneConnect Max Reuse 10 Results](screenshots/test-oneconnect-max-reuse-10-results.png)
+ 
 - **Backend TCP Connections Created:** **`8,000`** (4.0K on WEB01, 3.9K on WEB02)
 - **Total Requests Handled:** `88,100`
 - **Requests per Connection Ratio:** **`11.0`** (mathematically validating that connections were forcefully torn down and recreated every 10 requests).
 
 ---
 
-#### 4. Parametric Stress Test B — Moderate Pooling (`Maximum Reuse: 100`)
+#### 4. Test B — Moderate Pooling (`Maximum Reuse: 100`)
 Increasing `Maximum Reuse` to `100` allowed sockets to stay open for 100 requests before retirement:
 
-| Profile Configuration (`Max Reuse: 100`) | Measured Reduction in Sockets |
-|---|---|
-| ![OneConnect Max Reuse 100 Config](screenshots/test-oneconnect-max-reuse-100-config.png) | ![OneConnect Max Reuse 100 Results](screenshots/test-oneconnect-max-reuse-100-results.png) |
+**Profile Configuration (`Max Reuse: 100`)**
+
+![OneConnect Max Reuse 100 Config](screenshots/test-oneconnect-max-reuse-100-config.png)
+
+**Connection Details: Measured Reduction in Sockets**
+
+![OneConnect Max Reuse 100 Results](screenshots/test-oneconnect-max-reuse-100-results.png)
 
 - **Backend TCP Connections Created:** **`809`** (411 on WEB01, 398 on WEB02)
 - **Total Requests Handled:** `79,700`
