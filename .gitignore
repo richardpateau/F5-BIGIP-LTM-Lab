@@ -1,0 +1,30 @@
+# Credentials and secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+
+# SSH keys
+id_rsa
+id_ed25519
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
