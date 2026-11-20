@@ -14,21 +14,7 @@ In distributed application environments, standard Layer 4 and Layer 7 load-balan
 
 The test topology consists of two distinct client endpoints (`F5-CLIENT-01` and `F5-CLIENT-02`) initiating concurrent HTTP sessions against the Virtual Server (`VS-NGINX-WEB`). BIG-IP independently binds each client IP to a distinct backend pool member and maintains session stickiness across repeated requests.
 
-```text
-[ F5-CLIENT-01 (172.16.0.8) ] ──┐
-                                 │ HTTP:80
-                                 ▼
-                    [ F5 BIG-IP LTM (VIP: 172.16.0.7:80) ]
-                    │  * Profile: PERSIST-SOURCE-IP      │
-                    │  * Session Table: TMM Memory       │
-                    │  * Timeout: 180s Sliding Window    │
-                    └─────────────────┬──────────────────┘
-                                      │
-            ┌─────────────────────────┴─────────────────────────┐
-            ▼                                                   ▼
-   [ NGINX-WEB01 (172.16.0.5:80) ]                     [ NGINX-WEB02 (172.16.0.6:80) ]
-   (Persisted to 172.16.0.9)                           (Persisted to 172.16.0.8)
-```
+![Palo Alto](screenshots/source-address-draw-io.png)
 
 ### Infrastructure & Addressing Schema
 
