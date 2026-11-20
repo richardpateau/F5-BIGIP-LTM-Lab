@@ -58,7 +58,7 @@ To terminate inbound TLS on the proxy, a custom Client SSL profile was construct
 **Creating SSL Profile**
 ![Configuring Client SSL Profile](screenshots/creating-ssl-profile.png)
 
-**Applying Certificates**
+**Applying Certificates To Profile**
 
 ![Adding SSL Certificate to Profile](screenshots/adding-ssl-certificate-profile.png)
 
@@ -115,11 +115,11 @@ when HTTP_REQUEST {
 
 **iRule Overview**
 
-![Applying Certificate to Virtual Server](screenshots/applying-certificate-virtual-server.png)
+![Virtual Server Resource Binding](screenshots/applying-i-rule-nginx-web.png)
 
 **Binding Client SSL Profile to `VS-NGINX-HTTPS`**
 
-![Virtual Server Resource Binding](screenshots/applying-i-rule-nginx-web.png)
+![Applying Certificate to Virtual Server](screenshots/applying-certificate-virtual-server.png)
 
 ---
 
