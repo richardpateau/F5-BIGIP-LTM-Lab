@@ -48,17 +48,25 @@ Configured both SSL profiles on `VS-NGINX-HTTPS` along with the `http` profile (
 - **Client SSL Profile:** `CLIENTSSL-F5-LAB` (presents certificate to `F5-CLIENT-01` and decrypts inbound TLS).
 - **Server SSL Profile:** `SERVERSSL-NGINX-LAB` (parent `serverssl`, `Server Certificate: ignore` for self-signed lab backend certificates).
 
-**Server SSL Profile**
+**Creating Server SSL Profile**
 
 ![Server SSL Profile](screenshots/creating-ssl-profile.png)
 
-**Virtual Server SSL Profiles**
+**Virtual Server - Applying SSL Profiles**
  
 ![Virtual Server SSL Profiles](screenshots/virtual-server-adding-server-profile.png)
 
-**Default Pool**
+**Virtual Server - Applying Default Pool**
 
 ![Virtual Server Default Pool](screenshots/configuring-virtual-server-default-pool.png)
+
+**ClIENTSSL-F5-LAB Profile**
+
+![Server SSL Profile](screenshots/certificate-clientssl-f5-lab-details.png)
+
+**SERVERSSL-NGINX-LAB Profile**
+
+![Server SSL Profile](screenshots/certificate-clientssl-serverless-nginx-lab.png)
 
 ---
 
@@ -79,7 +87,7 @@ when HTTP_REQUEST {
 
 ![iRule Definition](screenshots/creating-i-rule.png)
 
-**Attached to Virtual Server**
+**Appying iRule to Virtual Server**
 
 ![Applying iRule](screenshots/applying-i-rule.png)
 
@@ -146,3 +154,5 @@ Checking `/var/log/nginx/access.log` on `NGINX-WEB01` confirmed requests arrived
 - **Why SSL Bridging vs. SSL Offloading:** SSL Bridging maintains encryption between BIG-IP and backend servers (required for zero-trust / compliance environments) while still allowing BIG-IP to inspect HTTP headers/URIs for iRules, WAF, or cookie persistence.
 - **Two Separate TLS Sessions:** The client negotiates TLS with `VS-NGINX-HTTPS` (`CLIENTSSL-F5-LAB`), while BIG-IP negotiates a completely independent TLS 1.2 session with the backend server (`SERVERSSL-NGINX-LAB`).
 - **Lab vs. Production Note:** In this lab, `SERVERSSL-NGINX-LAB` uses `Server Certificate: ignore` for self-signed backend certs. In production, the backend CA certificate should be imported into BIG-IP's Trusted Certificate Authorities to enforce backend certificate validation.
+
+---
