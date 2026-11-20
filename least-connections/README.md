@@ -1,4 +1,4 @@
-# F5 BIG-IP LTM — Dynamic Load Balancing: Least Connections Algorithm & Fault Tolerance Testing
+# Dynamic Load Balancing: Least Connections Algorithm & Fault Tolerance Testing
 
 ## Executive Summary & Engineering Objectives
 
@@ -210,16 +210,3 @@ Within seconds of stopping NGINX, BIG-IP's active health monitor detected the fa
 2. **Zero Blast Radius:** 100% of incoming and active client requests were automatically steered to `NGINX-WEB02`, preventing client connection resets or HTTP 502/504 Bad Gateway errors.
 
 ---
-
-## Architectural Findings & Production Engineering Best Practices
-
-### 1. Least Connections (Member) vs. Least Connections (Node)
-- **Least Connections (Member):** Evaluates connections on an individual `IP:Port` basis. Use this when multiple distinct services (e.g., HTTP on 80, HTTPS on 443, WebSocket on 8080) share the same physical or virtual host and scale independently.
-- **Least Connections (Node):** Evaluates total connections to the host IP address across all services. Use this in cloud environments where a single VM host has finite CPU, memory, or NIC bandwidth shared across all listening ports, preventing overall host exhaustion.
-
-### 2. Slow Ramp Time (Warm-Up Optimization)
-When adding a new server to a pool utilizing Least Connections—or recovering a node after a reboot—the newly introduced server has `0` active connections. Without configuration safeguards, the algorithm will aggressively direct **all** incoming connections to the new server until its connection count matches existing nodes, potentially triggering a CPU spike or crash (the "thundering herd" problem). 
-- **Production Recommendation:** Configure `Slow Ramp Time` (e.g., `300` seconds) on the pool. This gradually scales the ratio of traffic directed to the new node, allowing application runtimes (such as Java JVMs or Node.js caches) to warm up smoothly.
-
-### 3. Setting Connection Limits
-Under extreme traffic surges or DDoS attacks, Least Connections will balance traffic equally until both servers become saturated. Configuring a **Connection Limit** on each pool member ensures BIG-IP halts routing to a node once it reaches its safe operational ceiling, preserving backend stability.

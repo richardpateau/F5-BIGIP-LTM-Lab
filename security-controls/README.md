@@ -229,19 +229,3 @@ Capture file reference: [policies.pcap](pcaps/policies.pcap)
 3. **Immediate Kernel TCP Reset:** Frames 26–27 show `[RST]` issued **from `172.16.0.7:443` → `172.16.0.8`** — connection killed at the edge before any backend packet is generated.
 
 ---
-
-## Threat Model & Security Takeaways
-
-### 1. Cross-Site Tracing (XST) Prevention
-The HTTP `TRACE` method was originally designed for diagnostic reflection of request data. However, modern attackers leverage `TRACE` in combination with Cross-Site Scripting (XSS) to read HTTP request headers—including `Cookie` headers containing `HttpOnly` and `Secure` session tokens—completely undermining modern cookie isolation. Enforcing `Reset traffic flow` on `TRACE` at the ADC eliminates XST vectors before scripts can execute.
-
-### 2. Defense-in-Depth for Administrative Endpoints
-Web application routing logic frequently suffers from path normalization bypasses (e.g., URL encoding `%2f`, case variations, or reverse-proxy path stripping). By enforcing prefix matching on `/admin` and `/private` at the ADC layer, unauthorized external access is terminated before reaching the application framework's URL dispatcher.
-
-### 3. Layer 7 Reset vs. HTTP Error Responses
-While returning an `HTTP 403 Forbidden` or `HTTP 404 Not Found` response is common, executing an immediate TCP Reset (`Reset traffic flow`):
-- **Prevents Fingerprinting:** Attackers receive no HTTP response headers, preventing reconnaissance of backend web server versions or frameworks.
-- **Saves Memory & CPU:** TMM closes the TCP connection immediately without allocating buffers for HTTP response synthesis.
-- **Deters Automated Scanners:** Scanners encountering rapid TCP resets often flag the host as dead or unreachable, mitigating noise in backend application logs.
-
----
