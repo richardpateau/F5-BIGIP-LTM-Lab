@@ -48,9 +48,17 @@ Configured both SSL profiles on `VS-NGINX-HTTPS` along with the `http` profile (
 - **Client SSL Profile:** `CLIENTSSL-F5-LAB` (presents certificate to `F5-CLIENT-01` and decrypts inbound TLS).
 - **Server SSL Profile:** `SERVERSSL-NGINX-LAB` (parent `serverssl`, `Server Certificate: ignore` for self-signed lab backend certificates).
 
-| Server SSL Profile | Virtual Server SSL Profiles | Default Pool |
-|---|---|---|
-| ![Server SSL Profile](screenshots/creating-ssl-profile.png) | ![Virtual Server SSL Profiles](screenshots/virtual-server-adding-server-profile.png) | ![Virtual Server Default Pool](screenshots/configuring-virtual-server-default-pool.png) |
+**Server SSL Profile**
+
+![Server SSL Profile](screenshots/creating-ssl-profile.png)
+
+**Virtual Server SSL Profiles**
+ 
+![Virtual Server SSL Profiles](screenshots/virtual-server-adding-server-profile.png)
+
+**Default Pool**
+
+![Virtual Server Default Pool](screenshots/configuring-virtual-server-default-pool.png)
 
 ---
 
@@ -67,9 +75,18 @@ when HTTP_REQUEST {
 }
 ```
 
-| iRule Definition | Attached to Virtual Server | Network Map |
-|---|---|---|
-| ![iRule Definition](./creating-i-rule.png) | ![Applying iRule](./applying-i-rule.png) | ![Network Map](./network-map.png) |
+**iRule Definition**
+
+![iRule Definition](screenshots/creating-i-rule.png)
+
+**Attached to Virtual Server**
+
+![Applying iRule](screenshots/applying-i-rule.png)
+
+**Network Map**
+
+![Network Map](screenshots/network-map.png)
+
 
 ---
 
@@ -86,30 +103,42 @@ curl -kL https://172.16.0.7/web02
 # <h1>Welcome to NGINX-WEB02 (App 2)</h1>
 ```
 
-![Successful Client Curl Output](./client-curl-successful.png)
+![Successful Client Curl Output](screenshots/client-curl-successful.png)
 
 ---
 
 ### 2. Backend TLS 1.2 Handshake & Certificate Inspection (Wireshark)
 Capturing traffic on BIG-IP (`ssl.pcap`) confirmed that BIG-IP (`172.16.0.4`) establishes independent **TLSv1.2** handshakes with both `172.16.0.5:443` and `172.16.0.6:443`. Inspecting the `Server Hello` and `Certificate` packet confirmed the backend presented `id-at-commonName=nginx-web01.lab`:
 
-| Backend TLSv1.2 Handshakes | Backend Server Certificate (`nginx-web01.lab`) |
-|---|---|
-| ![PCAP Overview](./pcap-overview.png) | ![PCAP Server Hello & Certificate](./pcap-server-hello-details.png) |
+**Backend TLSv1.2 Handshakes** 
+
+![PCAP Overview](screenshots/pcap-overview.png)
+
+**Backend Server Certificate (`nginx-web01.lab`)** 
+
+![PCAP Server Hello & Certificate](screenshots/pcap-server-hello-details.png)|
 
 ---
 
 ### 3. Encrypted Backend Application Data (`tls.record.content_type == 23`)
 Filtering `ssl.pcap` for TLS Application Data records (`tls.record.content_type == 23 && tcp.port == 443`) confirmed that payload traffic between BIG-IP (`172.16.0.4`) and both backend servers (`172.16.0.5` / `172.16.0.6`) remained encrypted on the wire:
 
-![Encrypted TLS 1.2 Application Data](./pcap-application-data-encrpyted-tls-1.2.png)
+![Encrypted TLS 1.2 Application Data](screenshots/pcap-application-data-encrpyted-tls-1.2.png)
+
+**Web 01 (172.16.0.5) IP Verification**
+
+![PCAP Overview](screenshots/web-01-172.16.0.6-ip-verification.png)
+
+**Web 02 (172.16.0.6) IP Verification**
+
+![PCAP Overview](screenshots/web-01-172.16.0.5-ip-verification.png)
 
 ---
 
 ### 4. Backend NGINX Access Logs
-Checking `/var/log/nginx/access.log` on `NGINX-WEB01` confirmed requests arrived from BIG-IP's Self-IP (`172.16.0.4`) after TLS decryption and SNAT:
+Checking `/var/log/nginx/access.log` on `NGINX-WEB01` confirmed requests arrived from BIG-IP's Self-IP (`172.16.0.4`) after TLS decryption:
 
-![NGINX-WEB01 Access Log](./sudo-tail-web-01.png)
+![NGINX-WEB01 Access Log](screenshots/sudo-tail-web-01.png)
 
 ---
 
@@ -117,6 +146,3 @@ Checking `/var/log/nginx/access.log` on `NGINX-WEB01` confirmed requests arrived
 - **Why SSL Bridging vs. SSL Offloading:** SSL Bridging maintains encryption between BIG-IP and backend servers (required for zero-trust / compliance environments) while still allowing BIG-IP to inspect HTTP headers/URIs for iRules, WAF, or cookie persistence.
 - **Two Separate TLS Sessions:** The client negotiates TLS with `VS-NGINX-HTTPS` (`CLIENTSSL-F5-LAB`), while BIG-IP negotiates a completely independent TLS 1.2 session with the backend server (`SERVERSSL-NGINX-LAB`).
 - **Lab vs. Production Note:** In this lab, `SERVERSSL-NGINX-LAB` uses `Server Certificate: ignore` for self-signed backend certs. In production, the backend CA certificate should be imported into BIG-IP's Trusted Certificate Authorities to enforce backend certificate validation.
-```
-
-*(Quick reminder before pushing to GitHub: your BIG-IP GUI screenshots show `20.102.113.66` in the browser address bar—crop or blur that top URL bar if you want to keep your lab's public IP private!)*
