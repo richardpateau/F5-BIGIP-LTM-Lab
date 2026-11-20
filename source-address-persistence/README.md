@@ -1,6 +1,6 @@
 # F5 BIG-IP LTM — Source Address Persistence (Session Affinity)
 
-## Executive Summary & Engineering Objective
+## Summary & Engineering Objective
 
 This project demonstrates the design, deployment, and empirical verification of **Source Address Affinity Persistence** on an **F5 BIG-IP Local Traffic Manager (LTM)** deployed in Microsoft Azure.
 

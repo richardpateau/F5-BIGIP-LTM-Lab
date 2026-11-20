@@ -1,6 +1,6 @@
 # F5 BIG-IP LTM — SNAT Pools, Cloud Network Architecture & OneConnect Connection Multiplexing
 
-## Executive Summary & Engineering Objectives
+## Summary & Engineering Objectives
 
 This project documents the architectural design, cloud infrastructure integration, and empirical verification of **Source Network Address Translation (SNAT)** and **F5 OneConnect Connection Pooling** on an **F5 BIG-IP Local Traffic Manager (LTM)** deployed in Microsoft Azure.
 
