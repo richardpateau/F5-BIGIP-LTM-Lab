@@ -52,6 +52,10 @@ Configured both SSL profiles on `VS-NGINX-HTTPS` along with the `http` profile (
 
 ![Server SSL Profile](screenshots/creating-ssl-profile.png)
 
+**ClIENTSSL-F5-LAB Profile: Already Created**
+
+![Server SSL Profile](screenshots/certificate-clientssl-f5-lab-details.png)
+
 **Virtual Server - Applying SSL Profiles**
  
 ![Virtual Server SSL Profiles](screenshots/virtual-server-adding-server-profile.png)
@@ -60,13 +64,6 @@ Configured both SSL profiles on `VS-NGINX-HTTPS` along with the `http` profile (
 
 ![Virtual Server Default Pool](screenshots/configuring-virtual-server-default-pool.png)
 
-**ClIENTSSL-F5-LAB Profile**
-
-![Server SSL Profile](screenshots/certificate-clientssl-f5-lab-details.png)
-
-**SERVERSSL-NGINX-LAB Profile**
-
-![Server SSL Profile](screenshots/certificate-clientssl-serverless-nginx-lab.png)
 
 ---
 
