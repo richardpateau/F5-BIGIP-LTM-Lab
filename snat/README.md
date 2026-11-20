@@ -39,11 +39,18 @@ To deploy a dedicated multi-member SNAT pool, the Azure NIC was expanded with se
 ### Azure NIC Multi-IP Allocation
 Secondary private IP configurations (`SNAT-1` at `172.16.0.10` and `SNAT-2` at `172.16.0.11`) were provisioned on Azure network interface `f5-ltm-01368` within subnet `snet-eastus-1` (`172.16.0.0/24`):
 
-| Provisioning `SNAT-1` (`172.16.0.10`) | Azure NIC IP Configurations Overview |
-|---|---|
-| ![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-1.png) | ![Azure NIC IP Overview](screenshots/nic-ip-overview.png) |
+**Provisioning `SNAT-1` (`172.16.0.10`)**
 
-![Azure Virtual Machine Overview](screenshots/server-ip-verification.png)
+![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-1.png)
+
+**Provisioning `SNAT-2` (`172.16.0.11`)**
+
+![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-2.png)
+
+**Azure NIC IP Configurations Overview**
+
+![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-1.png)
+
 ---
 
 ## Phase 1: SNAT Baseline — Auto Map Evaluation
