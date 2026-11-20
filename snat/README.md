@@ -14,13 +14,15 @@ This project explores:
 
 ---
 
+## Architecture Diagram
+
+![Palo Alto](screenshots/snat-draw-io.png)
+
 ## Infrastructure Topology & Azure Cloud NIC Integration
 
 In Microsoft Azure, an F5 virtual appliance cannot arbitrarily transmit packets from unassigned IP addresses; the Azure Software Defined Network (SDN) fabric drops traffic originating from IPs not registered on the virtual network interface controller (NIC).
 
 To deploy a dedicated multi-member SNAT pool, the Azure NIC was expanded with secondary private static IP configurations matching the BIG-IP SNAT pool definition.
-
-![Azure Virtual Machine Overview](screenshots/server-ip-verification.png)
 
 ### Addressing & Infrastructure Topology
 
@@ -41,6 +43,7 @@ Secondary private IP configurations (`SNAT-1` at `172.16.0.10` and `SNAT-2` at `
 |---|---|
 | ![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-1.png) | ![Azure NIC IP Overview](screenshots/nic-ip-overview.png) |
 
+![Azure Virtual Machine Overview](screenshots/server-ip-verification.png)
 ---
 
 ## Phase 1: SNAT Baseline — Auto Map Evaluation
@@ -253,3 +256,5 @@ The raw packet captures supporting this project are preserved in the repository 
 2. **Preventing SNAT Port Exhaustion:** Enterprise environments running high concurrent volumes must avoid Auto Map. Deploying a multi-IP SNAT pool distributes source translations across multiple IP addresses, multiplying the available ephemeral port space by 64k per member.
 3. **Synergy of OneConnect + SNAT:** OneConnect acts as a direct multiplier of SNAT efficiency. By multiplexing hundreds of client HTTP requests over persistent backend TCP sockets, OneConnect drastically reduces the rate of ephemeral port consumption on SNAT pool addresses.
 4. **Preserving Client Identity:** Because SNAT masks the original client IP at Layer 3, an HTTP Profile must be configured on the Virtual Server to insert the `X-Forwarded-For` HTTP header, ensuring backend applications and security logging retain true client visibility.
+
+---
