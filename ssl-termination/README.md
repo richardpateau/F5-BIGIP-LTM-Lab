@@ -39,9 +39,13 @@ A dedicated 2048-bit RSA cryptographic keypair and self-signed X.509 certificate
 - **Private Key:** `f5-lab-key` (2048-bit RSA)
 - **Lifecycle / Validity:** Provisioned with a 1-year validity window; monitored through BIG-IP certificate expiration tracking.
 
-| Certificate Generation (`f5-lab.local`) | Certificate Store Overview |
-|---|---|
-| ![Creating SSL Certificate](screenshots/creating-certificate.png) | ![Certificate Management Overview](screenshots/certificate-overview.png) |
+**Certificate Generation**
+
+![Creating SSL Certificate](screenshots/creating-certificate.png)
+
+**Certificate Overview**
+
+![Certificate Management Overview](screenshots/certificate-overview.png)
 
 ---
 
@@ -51,12 +55,17 @@ To terminate inbound TLS on the proxy, a custom Client SSL profile was construct
 - Allowed BIG-IP to advertise TLS 1.2 and TLS 1.3 capabilities, negotiate ciphers, and decrypt incoming application payloads prior to LTM inspection.
 - Client authentication set to `ignore` for standard one-way TLS offloading.
 
-| Profile Key-Chain Binding | Active Client SSL Profiles |
-|---|---|
-| ![Adding SSL Certificate to Profile](screenshots/adding-ssl-certificate-profile.png) | ![Client SSL Profile List](screenshots/ssl-profile-overview.png) |
-
+**Creating SSL Profile**
 ![Configuring Client SSL Profile](screenshots/creating-ssl-profile.png)
 
+**Applying Certificates**
+
+![Adding SSL Certificate to Profile](screenshots/adding-ssl-certificate-profile.png)
+
+**SSL Profile Overview**
+
+![Client SSL Profile List](screenshots/ssl-profile-overview.png)
+ 
 ---
 
 ### 3. Backend HTTP Server Pools & Active Probing
@@ -65,9 +74,15 @@ Three distinct backend pools were configured to decouple application routing fro
 2. **`POOL-WEB02`:** Single-member pool mapped to `NGINX-WEB02` (`172.16.0.6:80`).
 3. **`POOL-NGINX-WEB`:** Dual-member pool (`172.16.0.5:80` and `172.16.0.6:80`) utilizing **Round Robin** load balancing for default traffic.
 
-| Provisioning `POOL-WEB01` | Provisioning `POOL-WEB02` |
-|---|---|
-| ![Creating POOL-WEB01](screenshots/creating-pool-1.png) | ![Creating POOL-WEB02](screenshots/creating-pool-2.png) |
+**Provisioning `POOL-WEB01`**
+
+![Creating POOL-WEB01](screenshots/creating-pool-1.png)
+
+**Provisioning `POOL-WEB02`**
+
+![Creating POOL-WEB02](screenshots/creating-pool-2.png)
+
+**Pool List Overview**
 
 ![Healthy Pool List Status](screenshots/pool-list-overview.png)
 
@@ -94,9 +109,15 @@ when HTTP_REQUEST {
 - **Server SSL Profile Omission (Offloading Proof):** On `VS-NGINX-HTTPS`, the **Client SSL Profile** is populated with `CLIENTSSL-F5-LAB`, but the **Server SSL Profile remains unassigned (`None`)**. This is the architectural boundary defining **SSL Termination** versus **SSL Bridging**: outbound connections to the backend pool are initiated strictly over plain HTTP (`TCP/80`).
 - **HTTP Profile Attachment:** The default `http` profile is attached to both virtual servers to parse RFC-compliant HTTP requests and expose the `HTTP_REQUEST` event to TMM.
 
-| iRule Definition (`IRULE-URI-ROUTING`) | Binding Client SSL Profile to `VS-NGINX-HTTPS` |
-|---|---|
-| ![iRule Configuration](screenshots/new-i-rule.png) | ![Applying Certificate to Virtual Server](screenshots/applying-certificate-virtual-server.png) |
+**iRule Definition (`IRULE-URI-ROUTING`)**
+
+![iRule Configuration](screenshots/new-i-rule.png)
+
+**iRule Overview**
+
+![Applying Certificate to Virtual Server](screenshots/applying-certificate-virtual-server.png)
+
+**Binding Client SSL Profile to `VS-NGINX-HTTPS`**
 
 ![Virtual Server Resource Binding](screenshots/applying-i-rule-nginx-web.png)
 
@@ -112,22 +133,24 @@ Automated client requests from `F5-CLIENT-01` (`172.16.0.8`) confirmed determini
 ```bash
 # URI routing to App 1
 curl -kL https://172.16.0.7/web01
-# Output: <h1>Welcome to NGINX-WEB01 (App 1)</h1>
+Output: <h1>Welcome to NGINX-WEB01 (App 1)</h1>
 
 # URI routing to App 2
 curl -kL https://172.16.0.7/web02
-# Output: <h1>Welcome to NGINX-WEB02 (App 2)</h1>
+Output: <h1>Welcome to NGINX-WEB02 (App 2)</h1>
 
 # Default path round-robin distribution
 curl -kL https://172.16.0.7
-# Alternates between:
-# <h1>NGINX WEB01 - Backend Server 1</h1>
-# <h1>NGINX WEB02 - Backend Server 2</h1>
+<h1>NGINX WEB01 - Backend Server 1</h1>
+<h1>NGINX WEB02 - Backend Server 2</h1>
 ```
+**HTTPS (`:443`) Offloading Verification**
 
-| HTTPS (`:443`) Offloading Verification | HTTP (`:80`) Baseline Verification |
-|---|---|
-| ![Curl HTTPS Validation](screenshots/curl-https-web-server.png) | ![Curl HTTP Validation](screenshots/curl-http-web-servers.png) |
+![Curl HTTPS Validation](screenshots/curl-https-web-server.png)
+
+**HTTP (`:80`) Baseline Verification**
+
+![Curl HTTP Validation](screenshots/curl-http-web-servers.png)
 
 ---
 
@@ -160,9 +183,9 @@ Filtering the identical capture file for the `http` protocol proves that the bac
 
 | Architecture Model | Client-Side Protocol | Proxy L7 Inspection | Backend Protocol | Backend Cryptographic Load | Primary Use Case |
 |---|---|---|---|---|---|
-| **SSL Passthrough** | HTTPS (`TCP/443`) | ❌ No (Layer 4 TCP) | HTTPS (`TCP/443`) | High (Servers perform full TLS) | E2E encryption where proxy cannot hold keys (e.g. strict regulatory requirements) |
-| **SSL Termination (Offloading)** *(Implemented)* | HTTPS (`TCP/443`) | ✅ Yes (`HTTP_REQUEST`, headers, URI) | HTTP (`TCP/80`) | **Zero** (Plaintext HTTP) | High-performance enterprise web tiers, internal trusted clouds, WAF/ADC inspection |
-| **SSL Bridging** | HTTPS (`TCP/443`) | ✅ Yes (`HTTP_REQUEST`, headers, URI) | HTTPS (`TCP/443`) | Moderate (Servers perform re-encrypted TLS) | Zero Trust architectures, cross-VPC untrusted segments, strict compliance (HIPAA/PCI-DSS) |
+| **SSL Passthrough** | HTTPS (`TCP/443`) | No (Layer 4 TCP) | HTTPS (`TCP/443`) | High (Servers perform full TLS) | E2E encryption where proxy cannot hold keys (e.g. strict regulatory requirements) |
+| **SSL Termination (Offloading)** *(Implemented)* | HTTPS (`TCP/443`) | Yes (`HTTP_REQUEST`, headers, URI) | HTTP (`TCP/80`) | **Zero** (Plaintext HTTP) | High-performance enterprise web tiers, internal trusted clouds, WAF/ADC inspection |
+| **SSL Bridging** | HTTPS (`TCP/443`) |  Yes (`HTTP_REQUEST`, headers, URI) | HTTPS (`TCP/443`) | Moderate (Servers perform re-encrypted TLS) | Zero Trust architectures, cross-VPC untrusted segments, strict compliance (HIPAA/PCI-DSS) |
 
 ### Key Engineering Observations:
 1. **CPU Overhead Elimination:** By stripping TLS processing at BIG-IP, backend servers avoid asymmetric mathematical operations (RSA/ECDSA key exchange) and symmetric encryption algorithms (AES-GCM/ChaCha20), yielding higher concurrent request throughput per backend compute instance.
