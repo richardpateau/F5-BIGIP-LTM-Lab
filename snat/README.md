@@ -44,12 +44,11 @@ Secondary private IP configurations (`SNAT-1` at `172.16.0.10` and `SNAT-2` at `
 ![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-1.png)
 
 **Provisioning `SNAT-2` (`172.16.0.11`)**
-
 ![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-2.png)
 
 **Azure NIC IP Configurations Overview**
 
-![Creating Secondary IP SNAT-1](screenshots/creating-nic-ip-snat-1.png)
+![Creating Secondary IP SNAT-1](screenshots/nic-ip-overview.png)
 
 ---
 
