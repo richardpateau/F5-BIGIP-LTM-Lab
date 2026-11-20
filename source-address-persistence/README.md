@@ -40,7 +40,7 @@ Under **Local Traffic &rarr; Profiles &rarr; Persistence**, a custom profile was
 - **Prefix Length:** `None` (full `/32` host address granularity to ensure exact IP-to-node matching)
 - **Map Proxies:** `Enabled` (optimizes tracking for upstream reverse proxy addresses)
 
-![Configuring Source Address Persistence Profile](configuring-source-address-persistence.png)
+![Configuring Source Address Persistence Profile](screenshots/configuring-source-address-persistence.png)
 
 ---
 
@@ -50,7 +50,7 @@ The custom persistence profile was bound to the HTTP Virtual Server (`VS-NGINX-W
 - **Default Persistence Profile:** `PERSIST-SOURCE-IP`
 - **Fallback Persistence Profile:** `None`
 
-![Virtual Server Default Persistence Configuration](default-persistence-profile-configuration.png)
+![Virtual Server Default Persistence Configuration](screenshots/default-persistence-profile-configuration.png)
 
 ---
 
@@ -78,7 +78,7 @@ All 10 requests deterministically returned:
 ```
 Without persistence, Round Robin would alternate 50/50 between WEB01 and WEB02. With persistence active, **100% of requests stayed locked to `NGINX-WEB02` (`172.16.0.6:80`)**.
 
-![Client 1 Curl Results Proving Stickiness](source-persistence-curl.png)
+![Client 1 Curl Results Proving Stickiness](screenshots/source-persistence-curl.png)
 
 ---
 
@@ -96,7 +96,7 @@ All 10 requests from Client 2 deterministically returned:
 ```
 This empirically proves that BIG-IP balanced Client 2 to `NGINX-WEB01` (`172.16.0.5:80`) while simultaneously holding Client 1 pinned to `NGINX-WEB02` (`172.16.0.6:80`).
 
-![Client 2 Curl Results Proving Independent Affinity](client-2-curl.png)
+![Client 2 Curl Results Proving Independent Affinity](screenshots/client-2-curl.png)
 
 ---
 
@@ -115,7 +115,7 @@ source-address  172.16.0.9  172.16.0.7:80  172.16.0.5:80  (tmm: 1)
 Total records returned: 2
 ```
 
-![TMSH Kernel Persistence Records Output](show-ltm-persistence-persist-records.png)
+![TMSH Kernel Persistence Records Output](screenshots/show-ltm-persistence-persist-records.png)
 
 #### Technical Analysis of Kernel Records:
 - **Record 1:** Client `172.16.0.8` connecting to Virtual Server `172.16.0.7:80` is pinned to pool member `172.16.0.6:80` on core `tmm: 1`.
