@@ -16,7 +16,7 @@ This project explores:
 
 ## Architecture Diagram
 
-![Palo Alto](screenshots/snat-draw-io.png)
+![BGPIP](screenshots/snat-draw-io.png)
 
 ## Infrastructure Topology & Azure Cloud NIC Integration
 

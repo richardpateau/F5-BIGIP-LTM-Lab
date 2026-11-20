@@ -1,6 +1,6 @@
-# F5 BIG-IP LTM — Layer 7 Security Controls: Local Traffic Policies, Sensitive URI Blocking & Method Filtering
+# Layer 7 Security Controls: Local Traffic Policies, Sensitive URI Blocking & Method Filtering
 
-## Executive Summary & Engineering Objectives
+## Summary & Engineering Objectives
 
 This project documents the architectural design, implementation, and empirical verification of **Layer 7 Security Controls** on an **F5 BIG-IP Local Traffic Manager (LTM)** deployed in Microsoft Azure.
 
@@ -13,37 +13,12 @@ To eliminate these threats at the perimeter, this project implements **F5 Local 
 
 ---
 
-## Technical Comparison: Local Traffic Policies vs. iRules vs. Advanced WAF
-
-| Security Mechanism | Execution Layer | Performance Overhead | Best Use Case | Operational Profile |
-|---|---|---|---|---|
-| **Local Traffic Policies** *(Implemented)* | Kernel / TMM Compiled | **Near-Zero (Highest Performance)** | URL path enforcement, HTTP method blocking, traffic steering, header injection | Declarative GUI/TMSH condition matrix; native draft/publish lifecycle; built-in telemetry |
-| **iRules (TCL)** | TMM Event Engine (Interpreted) | Moderate (TCL interpreter evaluation) | Complex cryptographic validation, custom payloads, dynamic session logic | Event-driven code (`HTTP_REQUEST`); requires syntax testing and regex optimization |
-| **Advanced WAF (ASM)** | Dedicated Security Engine | Higher (Deep payload inspection) | OWASP Top 10, SQLi, XSS, API security, bot defense, behavioral DoS | Signature-based and behavioral anomaly inspection; extensive signature updates |
-
----
-
 ## Architecture & Traffic Flow Topology
 
 The architecture consists of a client endpoint (`F5-CLIENT-01`) originating encrypted HTTPS requests toward the BIG-IP Virtual Server (`VS-NGINX-HTTPS`). Traffic matching sensitive paths (`/admin`, `/private`) or unauthorized verbs (`TRACE`, `CONNECT`) is instantly terminated with a TCP RST by BIG-IP, while legitimate requests (`GET /`) are forwarded to the backend NGINX application pool.
 
-```mermaid
-flowchart TD
-    Client["F5-CLIENT-01<br/>172.16.0.8"] -->|"HTTPS (TCP/443)"| VIP["VS-NGINX-HTTPS<br/>172.16.0.7:443<br/>(Client SSL Decryption)"]
-    
-    subgraph F5_LTM ["F5 BIG-IP LTM (TMM Engine)"]
-        VIP --> Policy["Local Traffic Policy:<br/>POLICY-HTTPS-SECURITY"]
-        Policy -->|"Condition: Path == /admin or /private"| BlockURI["Action: Reset traffic flow"]
-        Policy -->|"Condition: Method == TRACE or CONNECT"| BlockVerb["Action: Reset traffic flow"]
-        Policy -->|"Legitimate Request: GET /"| Allow["Forward to Pool Member"]
-    end
-    
-    BlockURI -->|"TCP RST (Immediate Teardown)"| Client
-    BlockVerb -->|"TCP RST (Immediate Teardown)"| Client
-    Allow -->|"Re-encrypted / Cleartext HTTP"| Pool["POOL-NGINX-HTTPS"]
-    Pool --> Node1["NGINX-WEB01<br/>172.16.0.5:443"]
-    Pool --> Node2["NGINX-WEB02<br/>172.16.0.6:443"]
-```
+![BGPIP](screenshots/security-controls-draw-io.png)
+
 
 ### Infrastructure Addressing & Node Roles
 
@@ -82,10 +57,14 @@ Content-Length: 166
 Connection: close
 Set-Cookie: BIGipServerPOOL-APP1-HTTPS=83890348.47873.0000; path=/; Httponly; Secure
 ```
+**Baseline Test: Unrestricted HTTP TRACE**
 
-| Baseline Test: Unrestricted HTTP TRACE | Baseline Test: Unrestricted HTTP CONNECT |
-|---|---|
-| ![Baseline HTTP TRACE Request](screenshots/published-trace.png) | ![Baseline HTTP CONNECT Request](screenshots/published-connect.png) |
+![Baseline HTTP TRACE Request](screenshots/published-trace.png)
+
+**Baseline Test: Unrestricted HTTP CONNECT**
+
+![Baseline HTTP CONNECT Request](screenshots/published-connect.png)
+
 
 ### Engineering Risk Analysis:
 1. **Backend Server Disclosure:** Even though NGINX rejected the methods with `HTTP 405 Not Allowed`, the server disclosed its software banner (`Server: nginx/1.24.0 (Ubuntu)`), facilitating targeted exploit matching.
@@ -119,9 +98,13 @@ Mitigates HTTP verb tampering, Cross-Site Tracing (XST), and unauthorized HTTP t
 ### 3. Policy Compilation & Strategy
 The policy configuration applies the **Execute first matching rule** strategy. If an incoming request matches any security rule in the chain, BIG-IP immediately resets the connection without evaluating downstream load-balancing logic.
 
-| Draft Policy Overview & Ordered Rule Chain | Published Policy Confirmation |
-|---|---|
-| ![Draft Policy Configuration](screenshots/creating-polic.png) | ![Published Policy in Common Partition](screenshots/published-policy.png) |
+**Draft Policy**
+
+![Draft Policy Configuration](screenshots/creating-policy.png)
+
+**Published Policy**
+
+![Published Policy in Common Partition](screenshots/published-policy.png)
 
 ---
 
@@ -129,9 +112,13 @@ The policy configuration applies the **Execute first matching rule** strategy. I
 
 To activate protection, the published policy was bound to Virtual Server `VS-NGINX-HTTPS` under **Local Traffic &rarr; Virtual Servers &rarr; Virtual Server List &rarr; VS-NGINX-HTTPS &rarr; Resources**:
 
-| Attaching Policy to Virtual Server Resources | Verified Virtual Server Resource Summary |
-|---|---|
-| ![Attaching Policy to Virtual Server](screenshots/applying-policy.png) | ![Applied Policy on VS-NGINX-HTTPS](screenshots/applied-policy.png) |
+**Attaching Policy to Virtual Server Resources**
+
+![Attaching Policy to Virtual Server](screenshots/applying-policy.png)
+
+**Virtual Server Resource Overview**
+
+![Applied Policy on VS-NGINX-HTTPS](screenshots/applied-policy.png)
 
 ### Applied Virtual Server Architecture:
 - **Default Pool:** `POOL-NGINX-HTTPS`
@@ -182,9 +169,13 @@ BIG-IP tracks policy execution metrics directly in kernel memory, enabling real-
 ### 1. Web GUI Policy Statistics
 Navigating to **Statistics &rarr; Module Statistics : Local Traffic &rarr; Policies** confirms that `POLICY-HTTPS-SECURITY` invoked and succeeded on all 5 enforcement actions:
 
-| Module Statistics Overview (`5 Invoked / 5 Succeeded`) | Detailed Rule Breakdown |
-|---|---|
-| ![Local Traffic Policy Statistics Overview](screenshots/statistics.png) | ![Policy Statistics Details by Rule](screenshots/statistics-details.png) |
+**Module Statistics Overview (`5 Invoked / 5 Succeeded`)**
+
+![Local Traffic Policy Statistics Overview](screenshots/statistics.png)
+
+**Detailed Rule Breakdown**
+
+![Policy Statistics Details by Rule](screenshots/statistics-details.png) |
 
 #### Exact Rule Execution Telemetry:
 - **`BLOCK-SENSITIVE-URLS`:** `2 Invoked`, `2 Succeeded` (Matched `/admin` and `/private`)
@@ -225,17 +216,17 @@ Status
 
 A packet capture was captured during test execution to inspect the exact wire behavior of the TCP reset action.
 
-Capture file reference: [policies.pcap](file:///home/rich/Documents/f5-big-ip-ltm-lab/security-controls/pcaps/policies.pcap)
+Capture file reference: [policies.pcap](pcaps/policies.pcap)
 
 ### Wireshark Filter: `tcp.port == 443`
 
 ![Wireshark TCP Reset Proof](screenshots/wireshark-reset-proof.png)
 
 ### Deep Packet Inspection:
-1. **Client TLS Handshake:** Frames `17`–`20` show the standard TLSv1.2 handshake completing between client `172.16.0.4` (SNAT/Self-IP) and backend server `172.16.0.6:443`.
-2. **HTTP Request Arrival:** Frame `21` transmits the encrypted HTTP request payload (`Application Data`).
-3. **Immediate Kernel TCP Reset:** Frames `26` and `27` show immediate `[RST]` packets issued on the wire (`443 -> 38227 [RST] Seq=1614 Win=0 Len=0` and `Seq=1646 Win=0 Len=0`).
-4. **Subsequent Connection Teardowns:** Frames `86` and `87` confirm identical deterministic TCP `[RST]` enforcement against subsequent unauthorized requests targeting `172.16.0.5:443`.
+
+1. **Client TLS Handshake:** Frames 17–20 show TLSv1.2 completing between client `172.16.0.8` and VIP `172.16.0.7:443`.
+2. **HTTP Request Arrival:** Frame 21 transmits the encrypted `Application Data` (the `/admin` or `TRACE` request).
+3. **Immediate Kernel TCP Reset:** Frames 26–27 show `[RST]` issued **from `172.16.0.7:443` → `172.16.0.8`** — connection killed at the edge before any backend packet is generated.
 
 ---
 
@@ -252,3 +243,5 @@ While returning an `HTTP 403 Forbidden` or `HTTP 404 Not Found` response is comm
 - **Prevents Fingerprinting:** Attackers receive no HTTP response headers, preventing reconnaissance of backend web server versions or frameworks.
 - **Saves Memory & CPU:** TMM closes the TCP connection immediately without allocating buffers for HTTP response synthesis.
 - **Deters Automated Scanners:** Scanners encountering rapid TCP resets often flag the host as dead or unreachable, mitigating noise in backend application logs.
+
+---
