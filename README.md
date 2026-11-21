@@ -50,7 +50,7 @@ A 12-module, packet-verified **Application Delivery Controller (ADC)** engineeri
 | 07 | [**Source Address Persistence**](source-address-persistence/README.md) | `PERSIST-SOURCE-IP` (`source_addr`, `180s` sliding timeout) | `tmsh show ltm persistence persist-records` proved `172.16.0.8` pinned to `.6` while `172.16.0.9` pinned independently to `.5` |
 | 08 | [**HTTP Cookie Insert Persistence**](cookie-persistence/README.md) | `PERSIST-COOKIE-LAB` (`HttpOnly`, `Secure`), Cookie Decoding | Decoded `83890348.47873.0000` → `172.16.0.5:443`; 100/100 requests stuck to `WEB02`; `persistence.pcap` proved **1,849 pkts** on `WEB02` vs. **50 monitor-only pkts** on `WEB01` |
 
-### 3. Security Controls, Traffic Shaping & Cloud Networking
+### 3. Security Controls, SNAT & Rate Limiting
 | # | Module | Key Objects & Concepts | Verified Engineering Proof |
 |---|---|---|---|
 | 09 | [**Layer 7 Security Controls (LTM Policies)**](security-controls/README.md) | `POLICY-HTTPS-SECURITY` (`BLOCK-SENSITIVE-URLS`, `BLOCK-UNSAFE-METHODS`) | Eliminated `/admin`, `/private`, `TRACE`, and `CONNECT` at TMM edge via TCP `RST` (**5 Invoked / 5 Succeeded** in `tmsh` & Wireshark), replacing `405` banner/cookie leaks |
@@ -108,14 +108,3 @@ f5-big-ip-ltm-lab/
 ├── snat/                           # Azure multi-IP NIC, Auto Map vs. SNAT-POOL pcaps
 └── f5-operational-monitoring/      # tmsh telemetry, load symmetry audit & outage forensics
 ```
-````
-
----
-
-### Quick Cleanup Heads-Up Before Pushing Your Latest Edits
-1. **Fix 3 remaining local `file:///` links** in your subfolder READMEs so `.pcap` links work on GitHub:
-   * `cookie-persistence/README.md` → change `file:///home/rich/Documents/f5-big-ip-ltm-lab/cookie-persistence/pcaps/persistence.pcap` to `pcaps/persistence.pcap` (3 places).
-   * `host-based-routing/README.md` → change `file:///home/rich/Documents/f5-big-ip-ltm-lab/host-based-routing/pcaps/host-based.pcap` to `pcaps/host-based.pcap` (2 places).
-   * `http-to-https-redirection/README.md` → change `file:///home/rich/Documents/f5-big-ip-ltm-lab/http-to-https-redirection/pcaps/redirection.pcap` to `pcaps/redirection.pcap` (1 place).
-2. **Double-check two tiny image filenames** in `ssl-bridging/README.md`: your `tree` shows `web-01-172.16.0.5-ip-verification.png` and `web-01-172.16.0.6-ip-verification.png`, and your pasted `ssl-bridging/README.md` has them swapped under the `Web 01` / `Web 02` captions (plus a stray `|` at the end of `![PCAP Server Hello & Certificate](...png)|`).
-3. **Check `http-rate-limiting/README.md`:** your `tree` shows `creating-i-rule.png`, `applying-i-rule.png`, etc., and it references `connection-limit.pcap` / `irule-rate-limit.pcap` (which aren't in `http-rate-limiting/pcaps/` in `tree`), which is totally fine if you just refer to them as local captures during testing rather than links.
