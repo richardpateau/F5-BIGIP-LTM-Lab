@@ -1,10 +1,10 @@
-# F5 BIG-IP LTM Operational Monitoring: TMSH Telemetry, Health Status & Real-Time Fault Diagnostics
+# Operational Monitoring: TMSH Telemetry, Health Status & Real-Time Fault Diagnostics
 
 ## Summary & Engineering Objectives
 
 This project documents the operational monitoring methodology, kernel-level telemetry extraction, and empirical fault-isolation analysis on an **F5 BIG-IP Local Traffic Manager (LTM)** deployed in Microsoft Azure.
 
-In enterprise application delivery networks, real-time observability is essential for maintaining application availability, detecting throughput bottlenecks, and conducting root-cause forensics during unplanned outages. While the F5 BIG-IP Configuration Utility (Web GUI) provides visual status indicators, enterprise network engineering and Site Reliability Engineering (SRE) teams rely on the **Traffic Management Shell (TMSH)** for deterministic, scriptable, low-overhead operational telemetry directly from the **Traffic Management Microkernel (TMM)**.
+In enterprise application delivery networks, real-time observability is essential for maintaining application availability, detecting throughput bottlenecks, and conducting root-cause forensics during unplanned outages. While the F5 BIG-IP Configuration Utility (Web GUI) provides visual status indicators, enterprise network engineering teams rely on the **Traffic Management Shell (TMSH)** for deterministic, scriptable, low-overhead operational telemetry directly from the **Traffic Management Microkernel (TMM)**.
 
 Using native TMOS operational commands (`show ltm virtual`, `show ltm pool`, and `show ltm pool [name] members`), administrators extract wire-level metrics that are not immediately visible in basic dashboards:
 - **Socket & Concurrency Lifecycle:** Tracking active, maximum, and total client-side and server-side TCP connections, connection queue depth, connection eviction counters, and slow connection terminations.
@@ -21,41 +21,6 @@ Using native TMOS operational commands (`show ltm virtual`, `show ltm pool`, and
 5. **Real-Time TMOS Diagnostic Verification:** Observe TMOS telemetry during active failure to capture automatic member status transition from `available` to `offline`, monitor timeout deadline expiration, and parent pool survival.
 
 ---
-
-## Architecture & Traffic Flow Topology
-
-The monitoring topology encompasses client traffic origination from `F5-CLIENT-01` (`172.16.0.8`) targeting Virtual Servers `VS-NGINX-WEB` (`172.16.0.7:80`) and `VS-NGINX-HTTPS` (`172.16.0.7:443`). In the backend, BIG-IP evaluates health state and load distribution across pool members `NGINX-WEB01` (`172.16.0.5:80`) and `NGINX-WEB02` (`172.16.0.6:80`).
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Admin as SRE / Network Admin (TMSH)
-    participant F5 as F5 BIG-IP LTM (TMM 172.16.0.4)
-    participant Web01 as NGINX-WEB01 (172.16.0.5)
-    participant Web02 as NGINX-WEB02 (172.16.0.6)
-
-    Note over F5,Web02: Baseline Healthy State: Periodic Layer 7 HTTP Probing
-    F5->>Web01: GET / HTTP/1.0 (MON-NGINX-HTTP)
-    Web01-->>F5: 200 OK (String match "NGINX WEB") -> UP
-    F5->>Web02: GET / HTTP/1.0 (MON-NGINX-HTTP)
-    Web02-->>F5: 200 OK (String match "NGINX WEB") -> UP
-
-    Note over Admin,F5: Phase 1-3: TMOS Telemetry Interrogation
-    Admin->>F5: tmsh show ltm virtual (VS-NGINX-WEB / VS-NGINX-HTTPS)
-    F5-->>Admin: Returns CMP all-cpus, Conn stats, SYN Cookie status
-    Admin->>F5: tmsh show ltm pool POOL-NGINX-WEB members
-    F5-->>Admin: Returns Symmetrical 50/50 stats (319.5K vs 319.1K reqs)
-
-    Note over Web02: Phase 4: Deliberate Outage Injection
-    Admin->>Web02: sudo systemctl stop nginx
-    Note over Web02: NGINX halted; TCP port 80 resets / drops probes
-
-    Note over F5,Web02: Phase 5: Failure Detection & Eviction
-    F5->>Web02: Layer 7 Probes fail 3x (16s timeout deadline reached)
-    Note over F5: TMM transitions NGINX-WEB02:80 to OFFLINE (Red Diamond)
-    Admin->>F5: tmsh show ltm pool POOL-NGINX-WEB members
-    F5-->>Admin: Active Members: 1, Available Members: 1, Web02: offline
-```
 
 ### Infrastructure Addressing & Node Roles
 
@@ -227,7 +192,6 @@ Comparing the operational counters between both backend pool members demonstrate
 | **Packets In** | `617.2K` | `616.6K` | `0.6K` | **50.02% / 49.98%** |
 | **Packets Out** | `321.9K` | `321.6K` | `0.3K` | **50.02% / 49.98%** |
 
-> [!NOTE]
 > The minute variance of 400 requests across >638,000 transactions represents a deviation of less than **0.06%**, confirming that TMM's connection dispatch engine operates with exceptional precision across multi-core CPU architectures.
 
 ---
