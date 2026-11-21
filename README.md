@@ -1,4 +1,4 @@
-# F5 BIG-IP LTM Enterprise Load Balancing & Traffic Management Lab (Azure)
+# F5 BIG-IP LTM Enterprise Load Balancing & Traffic Management Lab 
 
 A 12-module, packet-verified **Application Delivery Controller (ADC)** engineering lab built on **F5 BIG-IP Virtual Edition (TMOS 21.1.0.3)** in **Microsoft Azure**. Every module progresses from architectural design and GUI/`tmsh` configuration to empirical validation using `wrk` load benchmarks, `curl` tests, backend NGINX logs, TMOS kernel telemetry, and **Wireshark `.pcap` analysis** (including decrypted TLS 1.2/1.3 streams and F5 Ethernet Trailer inspection).
 
@@ -18,7 +18,7 @@ A 12-module, packet-verified **Application Delivery Controller (ADC)** engineeri
 
 ## Lab Topology & IP Addressing
 
-![Network Topology & Traffic Flow](screenshots/f5-read-me-draw-io.png)
+![Network Topology & Traffic Flow](f5-read-me-draw-io.png)
 
 | Node / Object | IP Address | Azure NIC Config | Role in Architecture |
 |---|---|---|---|
