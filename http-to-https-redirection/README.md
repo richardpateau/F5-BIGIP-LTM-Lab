@@ -22,7 +22,7 @@ However, end users and legacy client applications routinely initiate connections
 The deployment utilizes a dual-tier Virtual Server architecture. Port 80 traffic hits `VS-NGINX-WEB`, where the iRule executes an immediate 301 redirect. The client's subsequent HTTPS request connects directly to `VS-NGINX-HTTPS` on port 443.
 Azure VNet: vnet-eastus-1  |  Subnet: snet-eastus-1 (172.16.0.0/24)
 
-![Configuring Least Connections on POOL-NGINX-WEB](screenshots/http-to-https-draw-io.png)
+![F5](screenshots/http-to-https-draw-io.png)
 
 ### Infrastructure Addressing & Role Matrix
 

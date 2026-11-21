@@ -25,61 +25,11 @@ To deliver end-to-end edge defense without burdening backend application instanc
 
 ---
 
-## Technical Comparison: Defense-in-Depth Rate Limiting Architecture
-
-| Feature / Metric | Layer 4 Connection Limiting | Layer 7 iRule Rate Limiting | Backend Web Server (NGINX `limit_req`) |
-|---|---|---|---|
-| **OSI Operating Layer** | Layer 4 (Transport / TCP) | Layer 7 (Application / HTTP) | Layer 7 (Application / HTTP) |
-| **Enforcement Engine** | TMM Kernel Socket Table | TMM Memory Session Table (`table`) | NGINX Worker Threads / Memory Zone |
-| **Trigger Mechanism** | Active Concurrent Sockets | Request Velocity per Client IP | Request Velocity per Zone Key |
-| **Exceeded Action** | Immediate TCP RST / Reject | Edge `HTTP 429 Too Many Requests` | Local `HTTP 429` / `503` Response |
-| **Response Turnaround** | Wire-speed (Nanoseconds) | **Sub-millisecond (~670 µs)** | Milliseconds (~5–30 ms) |
-| **Backend CPU / RAM Impact** | **Zero** (Blocked at perimeter) | **Zero** (Terminated at edge) | High (Worker parsed request line & headers) |
-| **Client Guidance Header** | None (Connection reset) | `Retry-After: 10` (RFC 6585) | Configurable / None |
-| **Use Case Mitigation** | SYN/TCP floods, Slowloris, socket exhaustion | API scrapers, credential brute-force, DoS | Application-specific backend throttling |
-
----
-
 ## Architecture & Traffic Flow Topology
 
 The architecture consists of a Linux client (`F5-CLIENT-01`) originating both high-concurrency TCP connections and rapid HTTP/HTTPS request sequences toward BIG-IP Virtual Server `VS-NGINX-HTTPS`. 
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as F5-CLIENT-01 (172.16.0.8)
-    participant F5 as F5 BIG-IP (172.16.0.7 / 172.16.0.4)
-    participant WEB01 as NGINX-WEB01 (172.16.0.5)
-    participant WEB02 as NGINX-WEB02 (172.16.0.6)
-
-    Note over Client,F5: Scenario A: Layer 4 Connection Limit Exceeded (> 50 Concurrency)
-    Client->>F5: High-concurrency TCP SYNs (100 concurrent flows)
-    alt Active sockets <= 50
-        F5-->>Client: TCP SYN-ACK (Connection permitted)
-        F5->>WEB01: Load balance active session (25 connections)
-        F5->>WEB02: Load balance active session (25 connections)
-    else Active sockets > 50
-        F5-->>Client: TCP RST, ACK from 172.16.0.4 (Immediate edge socket termination)
-    end
-
-    Note over Client,F5: Scenario B: Layer 7 Request Rate Limit Exceeded (> 20 Req / 10s)
-    Client->>F5: Rapid HTTPS GET / requests (1 through 20)
-    Note over F5: TMM Session Table tracks client IP: Count incremented
-    F5->>WEB01: Forward request to backend pool
-    WEB01-->>F5: HTTP 200 OK
-    F5-->>Client: HTTP 200 OK (Requests 1-20 succeed)
-
-    Client->>F5: Request 21 (Breaches 20 req / 10s ceiling)
-    Note over F5: TMM evaluates IRULE-HTTP-RATE-LIMIT<br/>Turnaround: 670 microseconds
-    F5-->>Client: HTTP/1.0 429 Too Many Requests (Retry-After: 10)<br/>Backend bypassed completely!
-
-    Note over Client,F5: Scenario C: Window Timer Expiration & Recovery
-    Note over Client: Wait 10 seconds (Sliding window TTL expires)
-    Client->>F5: Request 22 (New window)
-    F5->>WEB01: Forward request to backend pool
-    WEB01-->>F5: HTTP 200 OK
-    F5-->>Client: HTTP/1.1 200 OK (Full recovery)
-```
+![F5](screenshots/rate-limiting-draw-io.png)
 
 ### Infrastructure Addressing & Role Matrix
 
@@ -395,34 +345,3 @@ The execution telemetry was cross-verified in the BIG-IP Web Configuration Utili
 - **Aborts:** `0`
 
 ---
-
-## Summary of All Lab Screenshots
-
-Every screenshot captured during this lab exercise is cataloged below, mapping each artifact to its specific architectural phase and operational purpose:
-
-| # | Screenshot Filename | Layer | Lab Phase | Technical Purpose & Validated Evidence |
-|---|---|---|---|---|
-| 1 | `configuring-connection-limit.png` | Layer 4 | Phase 1.1 | TMOS CLI configuration of `connection-limit 50` on `VS-NGINX-HTTPS`. |
-| 2 | `connection-details-triggering-100-connections.png` | Layer 4 | Phase 1.2 | `wrk` client benchmark generating 100 concurrent connections, capturing 13,261 connect errors. |
-| 3 | `connection-details-only-50-allows.png` | Layer 4 | Phase 1.3 | GUI Pool statistics proving pool concurrency capped at 50 (25 on WEB01, 25 on WEB02). |
-| 4 | `connection-limit-rst-172.16.0.4.png` | Layer 4 | Phase 1.4 | Wireshark capture of TCP RST packets originating from F5 Self-IP `172.16.0.4` across `tmm0`/`tmm1`. |
-| 5 | `creating-i-rule.png` | Layer 7 | Phase 2.1 | Authoring `IRULE-HTTP-RATE-LIMIT` using TMOS session tables and `HTTP::respond 429`. |
-| 6 | `i-rule-overview.png` | Layer 7 | Phase 2.2 | BIG-IP GUI iRules list overview displaying active `/Common` partition rules. |
-| 7 | `applying-i-rule.png` | Layer 7 | Phase 2.3 | Resource binding of `IRULE-HTTP-RATE-LIMIT` to Virtual Server `VS-NGINX-HTTPS`. |
-| 8 | `i-rule-curl-outcome.png` | Layer 7 | Phase 3.1 | Sequential `curl` test demonstrating 20x HTTP 200 OK followed by HTTP 429 Too Many Requests. |
-| 9 | `i-rule-curl-outcome-successful-after-timer.png` | Layer 7 | Phase 3.2 | Verification of client recovery and HTTP 200 OK after 10-second sliding expiration window. |
-| 10 | `i-rule-wireshark-preferences-import-key.png` | Layer 7 | Phase 4.1 | Importing TLS pre-master secret key (`host-name-keys.log`) in Wireshark for HTTPS decryption. |
-| 11 | `i-rule-wireshark-http-filter-overview.png` | Layer 7 | Phase 4.2 | Decrypted Wireshark HTTP stream showing transition from HTTP 200 to edge-enforced HTTP 429. |
-| 12 | `i-rule-wireshark-429-details.png` | Layer 7 | Phase 4.3 | Packet inspection of Frame 845 proving **670 µs turnaround latency** and `Retry-After: 10`. |
-| 13 | `i-rule-wireshark-429-details-virtual-server.png` | Layer 7 | Phase 4.4 | F5 Ethernet Trailer Low Details proving packet origination from `/Common/VS-NGINX-HTTPS` on `tmm1`. |
-| 14 | `show-ltm-rule.png` | Telemetry | Phase 5.1 | TMOS CLI `show ltm rule` displaying 83 executions, 0 failures, and 55.8K avg CPU cycles. |
-| 15 | `statistics.png` | Telemetry | Phase 5.2 | GUI Module Statistics confirming 83 executions with zero failures or aborts. |
-
----
-
-## Conclusion & Operational Best Practices
-
-1. **Defense-in-Depth Layering:** Layer 4 connection limits (`connection-limit`) prevent socket pool starvation from volumetric TCP floods, while Layer 7 session table rate limiting (`IRULE-HTTP-RATE-LIMIT`) protects application compute resources from high-frequency HTTP abuse.
-2. **Sub-Millisecond Wire Response:** By synthesizing HTTP 429 responses directly within TMM memory in **670 microseconds**, BIG-IP completely isolates backend application servers from malicious or runaway traffic.
-3. **Session Table Scalability:** Leveraging F5 TMOS session tables (`table` command) provides atomic, lockless, multi-core rate limiting with built-in sliding expiration timers, eliminating the overhead of external key-value stores.
-4. **RFC 6585 Compliance:** Supplying standardized `HTTP 429` status codes alongside `Retry-After` headers provides clear guidance for well-behaved API consumers and mobile clients, promoting automatic client-side throttling.
