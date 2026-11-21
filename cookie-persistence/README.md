@@ -134,7 +134,7 @@ Set-Cookie: BIGipServerPOOL-NGINX-HTTPS=83890348.47873.0000; path=/; Httponly; S
 #### A. Independent Tool Verification
 The captured header `Set-Cookie: BIGipServerPOOL-NGINX-HTTPS=83890348.47873.0000; path=/; Httponly; Secure` was decoded client-side using the [Ronutz BIG-IP Persistence Cookie Decoder](https://ronutz.com/en/tools/f5-bigip-persistence-cookie/), immediately resolving the payload to **`172.16.0.5:443`** (`NGINX-WEB01`) and flagging it as an internal RFC 1918 address:
 
-![Decoding F5 Persistence Cookie to 172.16.0.5:443](screenshots/cookie-decoder.png)
+![Decoding F5 Persistence Cookie to 172.16.0.5:443](screenshots/decoding-cookie.png)
 
 #### B. Security Finding: Internal Topology Disclosure
 As flagged by the decoder (`Internal address`), leaving **Cookie Encryption** disabled exposes internal RFC 1918 backend IP addresses (`172.16.0.5`) and listening ports (`443`) to any client inspecting HTTP response headers. While unencrypted cookies are ideal for lab verification and troubleshooting, production profiles should configure **Cookie Encryption** (AES passphrase) under `PERSIST-COOKIE-LAB` to mask internal network topology from external reconnaissance.
