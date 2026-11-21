@@ -20,33 +20,9 @@ However, end users and legacy client applications routinely initiate connections
 ## Architecture & Traffic Flow Topology
 
 The deployment utilizes a dual-tier Virtual Server architecture. Port 80 traffic hits `VS-NGINX-WEB`, where the iRule executes an immediate 301 redirect. The client's subsequent HTTPS request connects directly to `VS-NGINX-HTTPS` on port 443.
+Azure VNet: vnet-eastus-1  |  Subnet: snet-eastus-1 (172.16.0.0/24)
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as F5-CLIENT-01 (172.16.0.8)
-    participant HTTP_VIP as VS-NGINX-WEB (172.16.0.7:80)
-    participant HTTPS_VIP as VS-NGINX-HTTPS (172.16.0.7:443)
-    participant Backend as NGINX Backend Pool (172.16.0.5 / 172.16.0.6)
-
-    Note over Client,HTTP_VIP: Phase 1: Cleartext Interception & Edge Redirection
-    Client->>HTTP_VIP: TCP SYN to Port 80
-    HTTP_VIP-->>Client: TCP SYN-ACK
-    Client->>HTTP_VIP: GET /web01 HTTP/1.1 (Host: 172.16.0.7)
-    Note over HTTP_VIP: TMM evaluates IRULE-HTTP-TO-HTTPS<br/>Turnaround: ~110 microseconds
-    HTTP_VIP-->>Client: HTTP/1.0 301 Moved Permanently<br/>Location: https://172.16.0.7/web01<br/>Server: BigIP
-    Client->>HTTP_VIP: TCP FIN-ACK (Teardown)
-
-    Note over Client,HTTPS_VIP: Phase 2: Upgraded TLS Session & Application Delivery
-    Client->>HTTPS_VIP: TCP SYN to Port 443
-    HTTPS_VIP-->>Client: TCP SYN-ACK
-    Client->>HTTPS_VIP: TLS Client Hello & Handshake
-    HTTPS_VIP-->>Client: TLS Handshake Completed (Encrypted)
-    Client->>HTTPS_VIP: Encrypted GET /web01
-    HTTPS_VIP->>Backend: Forward to NGINX-WEB01:443
-    Backend-->>HTTPS_VIP: HTTP 200 OK (App Content)
-    HTTPS_VIP-->>Client: Encrypted HTTP 200 OK
-```
+![Configuring Least Connections on POOL-NGINX-WEB](screenshots/http-to-https-draw-io.png)
 
 ### Infrastructure Addressing & Role Matrix
 
