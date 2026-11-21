@@ -192,8 +192,6 @@ Comparing the operational counters between both backend pool members demonstrate
 | **Packets In** | `617.2K` | `616.6K` | `0.6K` | **50.02% / 49.98%** |
 | **Packets Out** | `321.9K` | `321.6K` | `0.3K` | **50.02% / 49.98%** |
 
-> The minute variance of 400 requests across >638,000 transactions represents a deviation of less than **0.06%**, confirming that TMM's connection dispatch engine operates with exceptional precision across multi-core CPU architectures.
-
 ---
 
 ## Phase 4: Deliberate Outage Injection & Real-Time TMOS Diagnostics
@@ -265,42 +263,6 @@ Querying the specific member telemetry for `NGINX-WEB02:80` revealed the exact f
    Reason : MON-NGINX-HTTP: No successful responses received before deadline. @2026/11/19 02:16:09.
    ```
 3. **Immediate Traffic Cutoff:** Active connections instantly dropped to `0`, preventing any client request from hitting the failed server.
-
----
-
-## Phase 5: Production Operational Runbook & TMSH Reference Guide
-
-To streamline day-to-day operations and incident response, the following TMSH commands provide essential telemetry across enterprise BIG-IP environments:
-
-### Essential TMSH Monitoring Commands:
-
-```bash
-# 1. Virtual Server Overview (Status, Hits, Sockets, Throughput)
-tmsh show ltm virtual
-tmsh show ltm virtual <virtual_server_name>
-
-# 2. Pool & Member Status Telemetry
-tmsh show ltm pool
-tmsh show ltm pool <pool_name>
-tmsh show ltm pool <pool_name> members
-
-# 3. Real-Time Active Connection Table Inspection
-tmsh show sys connection
-tmsh show sys connection cs-server-addr 172.16.0.7 cs-server-port 80
-tmsh show sys connection ss-server-addr 172.16.0.5
-
-# 4. Interface & VLAN Operational Statistics
-tmsh show net interface
-tmsh show net vlan
-
-# 5. Resetting Statistics Counters for Clean Benchmark Runs
-tmsh reset-stats ltm virtual <virtual_server_name>
-tmsh reset-stats ltm pool <pool_name>
-
-# 6. Real-Time Monitor & Kernel Log Inspection
-tail -f /var/log/ltm
-cat /var/log/ltm | grep -i "offline"
-```
 
 ---
 
