@@ -25,49 +25,9 @@ By utilizing Layer 7 health monitoring, F5 BIG-IP's **Traffic Management Microke
 
 The lab topology consists of a dedicated Linux client (`F5-CLIENT-01`) targeting the Virtual Server VIP (`VS-NGINX-WEB`). In the backend, F5 BIG-IP dispatches periodic Layer 7 probes across the internal network to both `NGINX-WEB01` and `NGINX-WEB02`.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as F5-CLIENT-01 (172.16.0.8)
-    participant F5 as F5 BIG-IP (172.16.0.7 / 172.16.0.4)
-    participant WEB01 as NGINX-WEB01 (172.16.0.5)
-    participant WEB02 as NGINX-WEB02 (172.16.0.6)
+![F5](screenshots/probe-healthy-draw-io.png)
 
-    Note over F5,WEB02: Baseline State: Both Nodes Healthy (MON-NGINX-HTTP active)
-    loop Every 5 Seconds (Interval)
-        F5->>WEB01: GET / HTTP/1.0\r\n\r\n
-        WEB01-->>F5: HTTP 200 OK (Contains "NGINX WEB")
-        F5->>WEB02: GET / HTTP/1.0\r\n\r\n
-        WEB02-->>F5: HTTP 200 OK (Contains "NGINX WEB")
-    end
-    Client->>F5: HTTP GET /
-    F5->>WEB01: Load balance request (Node 1)
-    Client->>F5: HTTP GET /
-    F5->>WEB02: Load balance request (Node 2)
-
-    Note over WEB01: Fault Injected: sudo systemctl stop nginx
-    loop Failed Probe Cycles
-        F5->>WEB01: GET / HTTP/1.0\r\n\r\n (Probe 1: Connection Refused)
-        F5->>WEB01: GET / HTTP/1.0\r\n\r\n (Probe 2: Connection Refused)
-        F5->>WEB01: GET / HTTP/1.0\r\n\r\n (Probe 3: Connection Refused)
-    end
-    Note over F5: Timeout (16s) expired -> NGINX-WEB01 marked DOWN (Red Diamond)
-
-    Note over Client,WEB02: Failover State: 100% Traffic Diverted to WEB02
-    Client->>F5: High-concurrency wrk workload (100 conns, 266K reqs)
-    F5->>WEB02: 100% of client requests steered to WEB02
-    WEB02-->>F5: HTTP 200 OK
-    F5-->>Client: HTTP 200 OK (0 dropped requests, 0 socket connect errors)
-
-    Note over WEB01: Service Restored: sudo systemctl start nginx
-    F5->>WEB01: GET / HTTP/1.0\r\n\r\n
-    WEB01-->>F5: HTTP 200 OK (Contains "NGINX WEB")
-    Note over F5: Probe succeeded -> NGINX-WEB01 marked UP (Green Circle)
-    Client->>F5: HTTP GET /
-    F5->>WEB01: Request routed to WEB01
-    Client->>F5: HTTP GET /
-    F5->>WEB02: Request routed to WEB02
-```
+![F5](screenshots/probe-failed-draw-io.png)
 
 ### Infrastructure Addressing & Node Roles
 
