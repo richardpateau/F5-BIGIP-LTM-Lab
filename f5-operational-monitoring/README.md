@@ -6,13 +6,6 @@ This project documents the operational monitoring methodology, kernel-level tele
 
 In enterprise application delivery networks, real-time observability is essential for maintaining application availability, detecting throughput bottlenecks, and conducting root-cause forensics during unplanned outages. While the F5 BIG-IP Configuration Utility (Web GUI) provides visual status indicators, enterprise network engineering teams rely on the **Traffic Management Shell (TMSH)** for deterministic, scriptable, low-overhead operational telemetry directly from the **Traffic Management Microkernel (TMM)**.
 
-Using native TMOS operational commands (`show ltm virtual`, `show ltm pool`, and `show ltm pool [name] members`), administrators extract wire-level metrics that are not immediately visible in basic dashboards:
-- **Socket & Concurrency Lifecycle:** Tracking active, maximum, and total client-side and server-side TCP connections, connection queue depth, connection eviction counters, and slow connection terminations.
-- **Connection Duration & Latency Profiles:** Measuring minimum, maximum, and mean connection durations across cleartext HTTP (`VS-NGINX-WEB`) and TLS-terminated HTTPS (`VS-NGINX-HTTPS`) listeners.
-- **DDoS Mitigation & SYN Cookie State:** Auditing hardware and software SYN Cookie activation states and cache overflow thresholds to detect Layer 4 floods.
-- **Load-Balancing Symmetry:** Evaluating per-node request distributions, packet counts, and byte counters across pool members to prove algorithmic equilibrium.
-- **Deterministic Health Monitor Eviction:** Auditing kernel-level health monitor failure timestamps and exact probe error strings (`MON-NGINX-HTTP: No successful responses received before deadline`) during simulated backend outages.
-
 ### Core Engineering Objectives:
 1. **Virtual Server Telemetry Auditing:** Extract real-time Layer 4/Layer 7 operational statistics across HTTP (`VS-NGINX-WEB:80`) and HTTPS (`VS-NGINX-HTTPS:443`) Virtual Servers, analyzing Clustered Multi-Processing (CMP) utilization and connection duration statistics.
 2. **Aggregated Pool Health & Telemetry Inspection:** Audit aggregate throughput, active member states, and queue metrics across primary balanced pools (`POOL-NGINX-WEB`) and dedicated application pools (`POOL-WEB01` and `POOL-WEB02`).

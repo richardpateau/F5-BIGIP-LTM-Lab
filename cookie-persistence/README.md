@@ -4,23 +4,6 @@
 
 This project documents the architectural design, implementation, cryptographic header inspection, and packet-level verification of **HTTP Cookie Persistence (HTTP Cookie Insert)** on an **F5 BIG-IP Local Traffic Manager (LTM)** deployed in Microsoft Azure.
 
-In modern distributed web applications, stateful user transactions—such as e-commerce shopping carts, multi-step financial checkout flows, user authentication sessions, and web application portals—require that successive requests from a client be deterministically routed to the exact backend application server maintaining that user's session state. 
-
-Traditional Layer 4 **Source Address Persistence** tracks affinity by caching client source IP addresses in BIG-IP kernel memory. However, Source Address Persistence encounters critical failure modes in real-world networks:
-- **The "Mega-Proxy" / CGNAT Bottleneck:** When thousands of enterprise users traverse a corporate forward proxy, cloud security gateway (e.g., Zscaler), or Carrier-Grade NAT (CGNAT), all clients share the identical source IP address. Layer 4 persistence binds this shared IP to a single backend node, causing severe load imbalance and node saturation ("hot-spotting").
-- **Dynamic Client IP Roaming:** Mobile clients hopping between Wi-Fi networks and cellular towers undergo frequent IP reallocations, prematurely severing their persistence affinity.
-- **Controller Memory Overhead:** Storing millions of IP hash mappings exhausts the Traffic Management Microkernel (TMM) memory state table.
-
-### The HTTP Cookie Insert Solution:
-F5 BIG-IP resolves these challenges via **Layer 7 HTTP Cookie Persistence**. Operating inside the decrypted TLS session on Virtual Server `VS-NGINX-HTTPS`, BIG-IP inspects and manipulates HTTP protocol headers directly:
-1. **Initial Dispatch:** Upon receiving an initial client request devoid of session cookies, TMM selects an available pool member using the configured load-balancing algorithm (e.g., Round Robin).
-2. **Dynamic Header Injection:** When the backend server returns an HTTP response, BIG-IP intercepts the stream and dynamically injects a RFC 6265 compliant `Set-Cookie:` header containing encoded server target information:
-   ```http
-   Set-Cookie: BIGipServerPOOL-NGINX-HTTPS=83890348.47873.0000; path=/; Httponly; Secure
-   ```
-3. **Stateless Controller Architecture:** Because the routing state resides entirely on the client browser and is returned in subsequent `Cookie:` request headers, BIG-IP does not maintain session tables in kernel RAM.
-4. **Security Hardening (`HttpOnly` & `Secure`):** Injection of `HttpOnly` shields the session token from cross-site scripting (XSS) extraction via `document.cookie`, while `Secure` ensures the browser only transmits the cookie over encrypted TLS tunnels.
-
 ### Core Engineering Objectives:
 1. **Custom Persistence Profile Engineering:** Author `PERSIST-COOKIE-LAB` (and `PERSIST-COOKIE`) utilizing the `HTTP Cookie Insert` method, hardening cookie transmission with `HTTPOnly` and `Secure` attributes and session-scoped expiration.
 2. **Virtual Server Association:** Bind the cookie persistence profile to secure Virtual Server `VS-NGINX-HTTPS` (`172.16.0.7:443`).
@@ -36,38 +19,7 @@ F5 BIG-IP resolves these challenges via **Layer 7 HTTP Cookie Persistence**. Ope
 
 The architecture leverages a dedicated Ubuntu client (`F5-CLIENT-01`) targeting the TLS Virtual Server (`VS-NGINX-HTTPS`). Traffic is evaluated by BIG-IP and persistently steered across dual NGINX application servers.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as F5-CLIENT-01 (172.16.0.8)
-    participant F5 as F5 BIG-IP (VS-NGINX-HTTPS 172.16.0.7)
-    participant Web01 as NGINX-WEB01 (172.16.0.5:443)
-    participant Web02 as NGINX-WEB02 (172.16.0.6:443)
-
-    Note over Client,F5: Transaction 1: Initial Request (No Cookie Present)
-    Client->>F5: TLS Client Hello & Handshake
-    F5-->>Client: TLS Established (Certificate Validated)
-    Client->>F5: GET / HTTPS (No Cookie Header)
-    Note over F5: TMM inspects headers: No BIGipServer cookie found<br/>Executes Round Robin -> Selects NGINX-WEB02
-    F5->>Web02: HTTPS GET / (Forwarded across backend TLS)
-    Web02-->>F5: HTTP/1.1 200 OK (Server 2 Payload)
-    Note over F5: HTTP Cookie Insert: Encodes 172.16.0.6:443 into cookie<br/>Injects Set-Cookie with HttpOnly & Secure flags
-    F5-->>Client: HTTP 200 OK + Set-Cookie: BIGipServerPOOL-NGINX-HTTPS=...
-    Note over Client: Client stores cookie in /tmp/f5-cookies.txt
-
-    Note over Client,Web02: Transactions 2 to 100: Session-Persistent Requests
-    loop Requests 002 to 100 (Automated Loop)
-        Client->>F5: GET / (Header: Cookie: BIGipServerPOOL-NGINX-HTTPS=...)
-        Note over F5: TMM decodes cookie -> Resolves 172.16.0.6:443<br/>Bypasses Round Robin; steers directly to Web02
-        F5->>Web02: HTTPS GET /
-        Web02-->>F5: HTTP/1.1 200 OK (NGINX WEB02 - Backend Server 2)
-        F5-->>Client: HTTP/1.1 200 OK (Zero Load Imbalance on Web01)
-    end
-
-    Note over F5,Web01: Independent Layer 7 Health Probing
-    F5->>Web01: Periodic GET / (MON-NGINX-HTTP :80) -> Healthy
-    F5->>Web02: Periodic GET / (MON-NGINX-HTTP :80) -> Healthy
-```
+![Show LTM Virtual VS-NGINX-WEB](screenshots/cookie-persistence.png)
 
 ### Infrastructure Addressing & Role Matrix
 
