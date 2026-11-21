@@ -70,7 +70,7 @@ azureuser@F5-CLIENT-01:~$ curl -Isk https://172.16.0.7 | grep -i Set-Cookie
 To enforce deterministic session stickiness at Layer 7, a dedicated Cookie Persistence profile was designed and associated with the Virtual Server.
 
 ### 1. Provisioning Custom Persistence Profile (`PERSIST-COOKIE`)
-Under **Local Traffic &rarr; Profiles : Persistence &rarr; New Persistence Profile...**, a custom profile was engineered:
+Under **Local Traffic &rarr; Profiles : Persistence &rarr; New Persistence Profile**, a custom profile was engineered:
 
 ![Creating Custom Cookie Persistence Profile](screenshots/creating-cookie-persistence.png)
 
@@ -129,49 +129,15 @@ Set-Cookie: BIGipServerPOOL-NGINX-HTTPS=83890348.47873.0000; path=/; Httponly; S
 
 ---
 
-### 3. F5 Cookie Encoding Mathematics & Reverse Engineering
-F5 BIG-IP encodes backend pool member IP addresses and service ports using a standardized decimal formula:
+### 3. F5 Cookie Reverse Engineering
 
-$$\text{Cookie Format: } \langle\text{Encoded IPv4}\rangle.\langle\text{Encoded Port}\rangle.\langle\text{Route Domain}\rangle$$
+#### A. Independent Tool Verification
+The captured header `Set-Cookie: BIGipServerPOOL-NGINX-HTTPS=83890348.47873.0000; path=/; Httponly; Secure` was decoded client-side using the [Ronutz BIG-IP Persistence Cookie Decoder](https://ronutz.com/en/tools/f5-bigip-persistence-cookie/), immediately resolving the payload to **`172.16.0.5:443`** (`NGINX-WEB01`) and flagging it as an internal RFC 1918 address:
 
-Given the observed cookie value: `83890348.47873.0000`
+![Decoding F5 Persistence Cookie to 172.16.0.5:443](screenshots/cookie-decoder.png)
 
-#### A. Decoding the Backend IPv4 Address (`83890348`):
-F5 encodes an IPv4 address $A.B.C.D$ into a 32-bit little-endian integer:
-
-$$\text{Encoded IP} = A + (B \times 256) + (C \times 65536) + (D \times 16777216)$$
-
-To reverse this into octets:
-- $A = 83890348 \pmod{256} = \mathbf{172}$
-- $B = \lfloor(83890348 / 256)\rfloor \pmod{256} = 327696 \pmod{256} = \mathbf{16}$
-- $C = \lfloor(83890348 / 65536)\rfloor \pmod{256} = 1280 \pmod{256} = \mathbf{0}$
-- $D = \lfloor(83890348 / 16777216)\rfloor \pmod{256} = 5 \pmod{256} = \mathbf{5}$
-
-$$\mathbf{\text{Decoded IP Address: } 172.16.0.5 \quad (NGINX-WEB01)}$$
-
-#### B. Decoding the Service Port (`47873`):
-F5 encodes the 16-bit port by swapping its high and low bytes (endian byte reversal):
-- Decimal `47873` in hexadecimal: `0xBB01`
-- Reversing bytes (`0xBB` and `0x01`): `0x01BB`
-- Hexadecimal `0x01BB` converted to decimal:
-
-$$(1 \times 256) + (11 \times 16) + 11 = 256 + 176 + 11 = \mathbf{443}$$
-
-$$\mathbf{\text{Decoded Port: } 443 \quad (HTTPS)}$$
-
-#### C. Route Domain (`0000`):
-- `0000` represents TMOS Route Domain `0` (the default global routing partition).
-
-```python
-# Verification Script in Python
-encoded_ip = 83890348
-ip_parts = [str((encoded_ip >> (i * 8)) & 0xFF) for i in range(4)]
-print(f"Decoded IP: {'.'.join(ip_parts)}")  # Output: 172.16.0.5
-
-encoded_port = 47873
-port = ((encoded_port & 0xFF) << 8) | ((encoded_port >> 8) & 0xFF)
-print(f"Decoded Port: {port}")              # Output: 443
-```
+#### B. Security Finding: Internal Topology Disclosure
+As flagged by the decoder (`Internal address`), leaving **Cookie Encryption** disabled exposes internal RFC 1918 backend IP addresses (`172.16.0.5`) and listening ports (`443`) to any client inspecting HTTP response headers. While unencrypted cookies are ideal for lab verification and troubleshooting, production profiles should configure **Cookie Encryption** (AES passphrase) under `PERSIST-COOKIE-LAB` to mask internal network topology from external reconnaissance.
 
 ---
 
@@ -296,3 +262,75 @@ Opening [persistence.pcap](file:///home/rich/Documents/f5-big-ip-ltm-lab/cookie-
 | **Math Decoding** | Little-endian bitwise decoding | `83890348.47873` | Decodes exactly to `172.16.0.5:443` | **Math Validated** |
 | **100-Request Stress Test** | 100-loop curl with cookie jar | `https://172.16.0.7/` | 100 out of 100 requests returned `NGINX WEB02` | **100% Session Affinity** |
 | **Wireshark Packet Audit** | `persistence.pcap` Endpoints | Backend Nodes | `WEB02`: 1,849 pkts vs. `WEB01`: 50 pkts | **Wire-Level Proof Established** |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Drop this directly into **`### 3. F5 Cookie Reverse Engineering`** (right between `### 2. Security Attribute Analysis` and `## Phase 4: 100-Request Automated Session Continuity Stress Test`).
+
+*(Save the screenshot into your `screenshots/` folder as `cookie-decoder.png`, or update the `./screenshots/...` filename below to match what you name it.)*
+
+---
+
+### Copy-paste section for `### 3. F5 Cookie Reverse Engineering`:
+
+```markdown
+### 3. F5 Cookie Reverse Engineering & Topology Exposure Analysis
+
+By default (with cookie encryption disabled), F5 BIG-IP encodes the target backend pool member's IPv4 address, TCP service port, and route domain directly into the cookie value using decimal integer encoding:
+
+```text
+BIGipServerPOOL-NGINX-HTTPS = 83890348 . 47873 . 0000
+                              |          |       |
+                              |          |       +-- Route Domain (0000 = Default RD 0)
+                              |          +---------- Byte-Swapped Port (47873 -> 443)
+                              +--------------------- Little-Endian IPv4 (83890348 -> 172.16.0.5)
+```
+
+#### Independent Tool Verification
+The captured header `Set-Cookie: BIGipServerPOOL-NGINX-HTTPS=83890348.47873.0000; path=/; Httponly; Secure` was decoded client-side using the [Ronutz BIG-IP Persistence Cookie Decoder](https://ronutz.com/en/tools/f5-bigip-persistence-cookie/), immediately resolving the payload to **`172.16.0.5:443`** (`NGINX-WEB01`) and flagging it as an internal RFC 1918 address:
+
+![Decoding F5 Persistence Cookie to 172.16.0.5:443](screenshots/cookie-decoder.png)
+
+#### B. Mathematical Breakdown
+F5 encodes an IPv4 address `A.B.C.D` as a 32-bit little-endian integer (`A + B×256 + C×65536 + D×16777216`) and swaps the high/low bytes of the 16-bit TCP port:
+
+1. **Decoding IPv4 (`83890348`):**
+   - `83890348` in hexadecimal = `0x050010AC`
+   - Reversing byte order (`0xAC` . `0x10` . `0x00` . `0x05`) &rarr; **`172.16.0.5`** (`NGINX-WEB01`)
+2. **Decoding TCP Port (`47873`):**
+   - `47873` in hexadecimal = `0xBB01`
+   - Swapping bytes (`0x01BB`) &rarr; **`443`** (`HTTPS`)
+3. **Route Domain (`0000`):**
+   - Corresponds to TMOS **Route Domain `0`** (default global routing partition).
+
+```python
+# Quick Python verification
+encoded_ip, encoded_port = 83890348, 47873
+ip = ".".join(str((encoded_ip >> (8 * i)) & 0xFF) for i in range(4))
+port = ((encoded_port & 0xFF) << 8) | (encoded_port >> 8)
+print(f"{ip}:{port}")  # Output: 172.16.0.5:443
+```
+
+#### C. Security Finding: Internal Topology Disclosure
+As flagged by the decoder (`Internal address`), leaving **Cookie Encryption** disabled exposes internal RFC 1918 backend IP addresses (`172.16.0.5`) and listening ports (`443`) to any client inspecting HTTP response headers. While unencrypted cookies are ideal for lab verification and troubleshooting, production profiles should configure **Cookie Encryption** (AES passphrase) under `PERSIST-COOKIE-LAB` to mask internal network topology from external reconnaissance.
+```
+
+*(Two quick README tidy-ups before you commit: update the `![Show LTM Virtual VS-NGINX-WEB](screenshots/cookie-persistence.png)` alt text near the top to `![Cookie Persistence Architecture](screenshots/cookie-persistence.png)`, and change the three `[persistence.pcap](file:///home/rich/Documents/...)` links to `[persistence.pcap](pcaps/persistence.pcap)` so they work on GitHub.)*
