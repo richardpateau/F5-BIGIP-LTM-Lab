@@ -45,7 +45,7 @@ The architecture leverages a single VIP (`172.16.0.7:443`) terminating TLS conne
 ## Phase 1: Dedicated HTTPS Application Pool Provisioning
 
 ### 1. Creating `POOL-APP1-HTTPS`
-Under **Local Traffic &rarr; Pools &rarr; Pool List &rarr; New Pool...**, a dedicated pool was configured for Application 1:
+Under **Local Traffic &rarr; Pools &rarr; Pool List &rarr; New Pool**, a dedicated pool was configured for Application 1:
 - **Name:** `POOL-APP1-HTTPS`
 - **Health Monitors:** `/Common/MON-NGINX-HTTPS` (Active)
 - **Load Balancing Method:** `Round Robin`
@@ -78,7 +78,7 @@ A separate pool was provisioned for Application 2:
 
 ## Phase 2: Authoring Host-Based Routing iRule (`IRULE-HOST-BASED-ROUTING`)
 
-Under **Local Traffic &rarr; iRules &rarr; iRule List &rarr; New iRule...**, the custom steering logic was authored in TCL:
+Under **Local Traffic &rarr; iRules &rarr; iRule List &rarr; New iRule**, the custom steering logic was authored in TCL:
 
 ```tcl
 when HTTP_REQUEST {
@@ -96,7 +96,7 @@ when HTTP_REQUEST {
 }
 ```
 
-**Authoring IRULE-HOST-BASED-ROUTING in TMOS GUI**
+**Creating IRULE-HOST-BASED-ROUTING**
 
 ![Creating iRule](screenshots/creating-i-rule.png)
 
@@ -263,7 +263,7 @@ Executing `show ltm pool POOL-APP1-HTTPS`:
 - **Throughput:** Bits In/Out: `21.7K / 42.4K`, Packets In/Out: `19 / 15`
 - **Current Connections:** `0`, **Maximum Connections:** `2`, **Total Connections:** `2`
 
-**TMOS Pool Statistics for POOL-APP1-HTTPS**
+**Pool Statistics for POOL-APP1-HTTPS**
 
 ![Show LTM Pool App 1](screenshots/show-ltm-pool-app-1.png)
 
@@ -371,16 +371,3 @@ curl: (56) Recv failure: Connection reset by peer
 3. **Consolidation Without Compromise:** Proves that multiple distinct applications can share a single high-availability Virtual Server and public IP address while maintaining complete isolation in performance, security, and service availability.
 
 ---
-
-## Production Best Practices & Architectural Guidelines
-
-1. **SNI (Server Name Indication) & TLS Certificates:**
-   When hosting multiple distinct FQDNs on a single IP address, ensure the client-SSL profile is configured with a Multi-Domain (SAN) certificate, a Wildcard certificate, or multiple SSL profiles utilizing Server Name Indication (SNI) so each domain presents a trusted certificate.
-2. **Local Traffic Policies (LTM Policies) vs iRules:**
-   For high-scale environments handling tens of thousands of requests per second, consider using BIG-IP native **LTM Policies** (CPM - Content Policy Management). LTM Policies compile into kernel-level decision trees, offering even lower CPU consumption than TCL-based iRules.
-3. **Strict Case Normalization:**
-   Always use `[string tolower [HTTP::host]]` before performing string comparisons to prevent case-variation bypasses or routing misses.
-4. **FQDN Normalization & Port Stripping:**
-   In non-standard port deployments, `[HTTP::host]` may contain the port number (e.g. `app1.f5-lab.local:8443`). Use `[getfield [HTTP::host] ":" 1]` to reliably strip the port suffix prior to matching.
-5. **Edge Security Shielding:**
-   Always include a `default` catch-all action in routing logic to return `HTTP 404` or `HTTP 403`, preventing direct IP-based scanning and unauthorized domain tunneling from touching backend resources.
