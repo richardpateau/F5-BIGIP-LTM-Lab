@@ -232,7 +232,7 @@ Capture file reference: [policies.pcap](pcaps/policies.pcap)
 
 ### What's Next?
 
-With comprehensive Layer 7 security policies and attack mitigation fully validated, the final step is to master operational visibility and deterministic troubleshooting.
+With comprehensive Layer 7 security policies and attack mitigation fully validated, the next step is to optimize how traffic is distributed among those healthy nodes based on real-time server load rather than static algorithms.
 
-Continue to the final task to explore kernel-level telemetry:
-- **[Task 12: F5 Operational Monitoring & TMSH Diagnostics](../f5-operational-monitoring/)** – Extracting real-time CMP utilization, pool member symmetry, and root-cause eviction telemetry directly from the Traffic Management Microkernel.
+Continue to the next module to explore dynamic load balancing:
+- **[Dynamic Load Balancing & Least Connections Algorithm](../least-connections/)** – Configuring adaptive traffic distribution to prevent backend hot-spotting and ensure equitable connection handling under asymmetrical workloads.

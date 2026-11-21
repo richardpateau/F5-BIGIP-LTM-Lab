@@ -274,6 +274,9 @@ Querying the specific member telemetry for `NGINX-WEB02:80` revealed the exact f
 
 ---
 
-### Return to Main Repository
+### What's Next?
 
-**[Return to Main Repository README](../README.md)**
+With comprehensive operational visibility and kernel-level telemetry fully validated, the next step is to implement a more robust, NAT-resistant session affinity method that operates at Layer 7.
+
+Continue to the final module to explore advanced cookie-based stickiness:
+- **[HTTP Cookie Insert Persistence & Packet Telemetry](../cookie-persistence/)** – Engineering hardened, session-scoped HTTP cookies to maintain flawless stateful continuity across complex enterprise proxy and NAT environments.

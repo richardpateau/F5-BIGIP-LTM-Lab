@@ -213,9 +213,4 @@ Opening [persistence.pcap](file:///home/rich/Documents/f5-big-ip-ltm-lab/cookie-
 
 ---
 
-### What's Next?
-
-With stateful session management and cookie persistence fully validated, the next step is to enforce baseline transport security by ensuring no cleartext HTTP traffic ever reaches the backend.
-
-Continue to the next task to explore automated protocol upgrades:
-- **[Task 6: Automated HTTP-to-HTTPS Redirection via iRules](../http-to-https-redirection/)** – Intercepting cleartext port 80 traffic at the ADC edge and synthesizing RFC-compliant 301 redirects to force encrypted TLS sessions.
+**[Return to Main Repository README](../README.md)**

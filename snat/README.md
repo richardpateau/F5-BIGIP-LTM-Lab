@@ -201,7 +201,7 @@ The raw packet captures supporting this project are preserved in the repository 
 
 ### What's Next?
 
-With cloud routing, SNAT scale-out, and connection multiplexing fully validated, the next step is to protect the application edge from volumetric floods and API abuse.
+With cloud routing, SNAT scale-out, and connection multiplexing fully validated, the next step is to enforce granular, application-layer security policies to block malicious reconnaissance and HTTP verb tampering.
 
-Continue to the next task to explore multi-layer traffic shaping:
-- **[Task 10: Layer 4 Connection Limiting & Layer 7 Rate Limiting](../http-rate-limiting/)** – Implementing defense-in-depth DoS mitigation using hardware-accelerated TCP resets and sub-millisecond TCL session-table throttling.
+Continue to the next module to explore perimeter security controls:
+- **[Layer 7 Security Policies & Method Filtering](../security-controls/)** – Engineering Local Traffic Policies to instantly reset connections targeting sensitive URIs (`/admin`) or dangerous HTTP methods (`TRACE`, `CONNECT`) at the TMM kernel edge.

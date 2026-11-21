@@ -142,7 +142,7 @@ Total records returned: 2
 
 ### What's Next?
 
-With foundational IP-based persistence validated, the next step is to implement a more robust, NAT-resistant session affinity method that operates at Layer 7.
+With foundational IP-based persistence validated, the next step is to resolve cloud-specific routing constraints and prevent ephemeral port exhaustion under heavy concurrency.
 
-Continue to the next task to explore advanced cookie-based stickiness:
-- **[Task 5: HTTP Cookie Insert Persistence & Packet Telemetry](../cookie-persistence/)** – Engineering hardened, session-scoped HTTP cookies to maintain flawless stateful continuity across complex enterprise proxy and NAT environments.
+Continue to the next module to explore cloud network architecture and connection multiplexing:
+- **[SNAT Pools & OneConnect Connection Multiplexing](../snat/)** – Engineering dedicated source translation pools to prevent asymmetric routing in Azure, paired with OneConnect to drastically reduce backend socket churn.

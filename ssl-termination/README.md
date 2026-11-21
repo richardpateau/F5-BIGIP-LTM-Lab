@@ -196,7 +196,7 @@ Filtering the identical capture file for the `http` protocol proves that the bac
 
 ### What's Next?
 
-With foundational SSL Termination and Layer 7 URI routing fully validated, the next step is to ensure that traffic is only ever sent to healthy, responsive backend applications. 
+With foundational SSL Termination and Layer 7 URI routing fully validated, the next step is to ensure that sensitive internal traffic remains encrypted end-to-end, even after passing through the load balancer.
 
-Continue to the next task to explore proactive application health checks:
-- **[Task 2: Application Health Monitoring & High-Availability Failover](../http-health-monitoring/)** – Configuring custom Layer 7 HTTP probes to detect application-level failures and dynamically evict unhealthy nodes without dropping active client connections.
+Continue to the next module to explore full TLS proxy architectures:
+- **[SSL Bridging & Backend Re-Encryption](../ssl-bridging/)** – Terminating client-side TLS for Layer 7 inspection, then establishing a separate, independent TLS session to backend servers for zero-trust compliance.

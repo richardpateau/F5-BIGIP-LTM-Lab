@@ -188,7 +188,7 @@ Within seconds of stopping NGINX, BIG-IP's active health monitor detected the fa
 
 ### What's Next?
 
-With dynamic load balancing and fault tolerance fully validated, the next step is to ensure that stateful applications maintain session continuity for users, even as traffic scales.
+With dynamic load balancing and fault tolerance fully validated, the next step is to enforce baseline transport security by ensuring no cleartext HTTP traffic ever reaches the backend.
 
-Continue to the next task to explore Layer 4 session affinity:
-- **[Task 4: Source Address Persistence & Session Affinity](../source-address-persistence/)** – Implementing IP-based stickiness to guarantee that returning clients are deterministically routed to the same backend server where their session was instantiated.
+Continue to the next module to explore automated protocol upgrades:
+- **[Automated HTTP-to-HTTPS Redirection via iRules](../http-to-https-redirection/)** – Intercepting cleartext port 80 traffic at the ADC edge and synthesizing RFC-compliant 301 redirects to force encrypted TLS sessions.

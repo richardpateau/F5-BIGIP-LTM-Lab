@@ -374,7 +374,7 @@ curl: (56) Recv failure: Connection reset by peer
 
 ### What's Next?
 
-With multi-tenant host-based routing and fault isolation fully validated, the next step is to ensure that sensitive internal traffic remains encrypted end-to-end, even after passing through the load balancer.
+With multi-tenant host-based routing and fault isolation fully validated, the final step is to master operational visibility and deterministic troubleshooting.
 
-Continue to the next task to explore full TLS proxy architectures:
-- **[Task 8: SSL Bridging & Backend Re-Encryption](../ssl-bridging/)** – Terminating client-side TLS for Layer 7 inspection, then establishing a separate, independent TLS 1.2 session to backend servers for zero-trust compliance.
+Continue to the next module to explore kernel-level telemetry:
+- **[F5 Operational Monitoring & TMSH Diagnostics](../f5-operational-monitoring/)** – Extracting real-time CMP utilization, pool member symmetry, and root-cause eviction telemetry directly from the Traffic Management Microkernel.

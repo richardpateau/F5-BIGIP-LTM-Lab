@@ -156,7 +156,7 @@ Checking `/var/log/nginx/access.log` on `NGINX-WEB01` confirmed requests arrived
 
 ### What's Next?
 
-With end-to-end SSL Bridging and Layer 7 inspection fully validated, the next step is to resolve cloud-specific routing constraints and prevent ephemeral port exhaustion under heavy concurrency.
+With foundational IP-based persistence validated, the next step is to resolve cloud-specific routing constraints and prevent ephemeral port exhaustion under heavy concurrency.
 
-Continue to the next task to explore cloud network architecture and connection multiplexing:
-- **[Task 9: SNAT Pools & OneConnect Connection Multiplexing](../snat/)** – Engineering dedicated source translation pools to prevent asymmetric routing in Azure, paired with OneConnect to drastically reduce backend socket churn.
+Continue to the next module to explore cloud network architecture and connection multiplexing:
+- **[SNAT Pools & OneConnect Connection Multiplexing](../snat/)** – Engineering dedicated source translation pools to prevent asymmetric routing in Azure, paired with OneConnect to drastically reduce backend socket churn.

@@ -204,7 +204,7 @@ No.  Time      Source        Destination   Protocol Length Info
 
 ### What's Next?
 
-With automated TLS enforcement and cleartext interception fully validated, the next step is to maximize infrastructure efficiency by hosting multiple distinct applications behind a single shared Virtual Server IP.
+With automated TLS enforcement and cleartext interception fully validated, the next step is to protect the application edge from volumetric floods and API abuse.
 
-Continue to the next task to explore multi-tenant traffic steering:
-- **[Task 7: Layer 7 Host-Based Routing & Multi-Tenancy](../host-based-routing/)** – Utilizing FQDN host header inspection to dynamically route traffic to dedicated application pools while maintaining strict fault isolation.
+Continue to the next module to explore multi-layer traffic shaping:
+- **[Layer 4 Connection Limiting & Layer 7 Rate Limiting](../http-rate-limiting/)** – Implementing defense-in-depth DoS mitigation using hardware-accelerated TCP resets and sub-millisecond TCL session-table throttling..

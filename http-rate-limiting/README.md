@@ -348,7 +348,7 @@ The execution telemetry was cross-verified in the BIG-IP Web Configuration Utili
 
 ### What's Next?
 
-With volumetric traffic shaping and rate limiting fully validated, the next step is to enforce granular, application-layer security policies to block malicious reconnaissance and HTTP verb tampering.
+With volumetric traffic shaping and rate limiting fully validated, the next step is to ensure that traffic is only ever sent to healthy, responsive backend applications.
 
-Continue to the next task to explore perimeter security controls:
-- **[Task 11: Layer 7 Security Policies & Method Filtering](../security-controls/)** – Engineering Local Traffic Policies to instantly reset connections targeting sensitive URIs (`/admin`) or dangerous HTTP methods (`TRACE`, `CONNECT`) at the TMM kernel edge.
+Continue to the next module to explore proactive application health checks:
+- **[Application Health Monitoring & High-Availability Failover](../http-health-monitoring/)** – Configuring custom Layer 7 HTTP probes to detect application-level failures and dynamically evict unhealthy nodes without dropping active client connections.
