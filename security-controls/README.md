@@ -229,3 +229,10 @@ Capture file reference: [policies.pcap](pcaps/policies.pcap)
 3. **Immediate Kernel TCP Reset:** Frames 26–27 show `[RST]` issued **from `172.16.0.7:443` → `172.16.0.8`** — connection killed at the edge before any backend packet is generated.
 
 ---
+
+### What's Next?
+
+With comprehensive Layer 7 security policies and attack mitigation fully validated, the final step is to master operational visibility and deterministic troubleshooting.
+
+Continue to the final task to explore kernel-level telemetry:
+- **[Task 12: F5 Operational Monitoring & TMSH Diagnostics](../f5-operational-monitoring/)** – Extracting real-time CMP utilization, pool member symmetry, and root-cause eviction telemetry directly from the Traffic Management Microkernel.

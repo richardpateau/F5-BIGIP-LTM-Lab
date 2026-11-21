@@ -201,3 +201,10 @@ No.  Time      Source        Destination   Protocol Length Info
    - In the packet capture, zero packets with destination `172.16.0.5:80` or `172.16.0.6:80` were generated for these client requests, verifying 100% backend compute isolation.
 
 ---
+
+### What's Next?
+
+With automated TLS enforcement and cleartext interception fully validated, the next step is to maximize infrastructure efficiency by hosting multiple distinct applications behind a single shared Virtual Server IP.
+
+Continue to the next task to explore multi-tenant traffic steering:
+- **[Task 7: Layer 7 Host-Based Routing & Multi-Tenancy](../host-based-routing/)** – Utilizing FQDN host header inspection to dynamically route traffic to dedicated application pools while maintaining strict fault isolation.

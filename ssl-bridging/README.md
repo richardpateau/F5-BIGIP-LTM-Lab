@@ -1,4 +1,4 @@
-# F5 BIG-IP LTM — SSL Bridging & Layer 7 URI Routing
+# SSL Bridging & Layer 7 URI Routing
 
 ## Overview
 
@@ -153,3 +153,10 @@ Checking `/var/log/nginx/access.log` on `NGINX-WEB01` confirmed requests arrived
 - **Lab vs. Production Note:** In this lab, `SERVERSSL-NGINX-LAB` uses `Server Certificate: ignore` for self-signed backend certs. In production, the backend CA certificate should be imported into BIG-IP's Trusted Certificate Authorities to enforce backend certificate validation.
 
 ---
+
+### What's Next?
+
+With end-to-end SSL Bridging and Layer 7 inspection fully validated, the next step is to resolve cloud-specific routing constraints and prevent ephemeral port exhaustion under heavy concurrency.
+
+Continue to the next task to explore cloud network architecture and connection multiplexing:
+- **[Task 9: SNAT Pools & OneConnect Connection Multiplexing](../snat/)** – Engineering dedicated source translation pools to prevent asymmetric routing in Azure, paired with OneConnect to drastically reduce backend socket churn.

@@ -271,3 +271,9 @@ Querying the specific member telemetry for `NGINX-WEB02:80` revealed the exact f
 | **Fault Injection** | `NGINX-WEB02` | `sudo systemctl stop nginx` | Service stopped; port 80 unresponsive to Layer 7 probes | **Fault Injected** |
 | **Pool Resiliency** | `POOL-NGINX-WEB` | `show ltm pool ... members` | Active members decremented to 1; pool remains `available` | **HA Preserved** |
 | **Eviction Telemetry** | `NGINX-WEB02:80` | `show ltm pool ... members` | Marked `offline`; deadline expiration logged at `02:16:09` | **Forensics Logged** |
+
+---
+
+### Return to Main Repository
+
+**[Return to Main Repository README](../README.md)**

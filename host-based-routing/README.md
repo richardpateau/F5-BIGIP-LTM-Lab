@@ -371,3 +371,10 @@ curl: (56) Recv failure: Connection reset by peer
 3. **Consolidation Without Compromise:** Proves that multiple distinct applications can share a single high-availability Virtual Server and public IP address while maintaining complete isolation in performance, security, and service availability.
 
 ---
+
+### What's Next?
+
+With multi-tenant host-based routing and fault isolation fully validated, the next step is to ensure that sensitive internal traffic remains encrypted end-to-end, even after passing through the load balancer.
+
+Continue to the next task to explore full TLS proxy architectures:
+- **[Task 8: SSL Bridging & Backend Re-Encryption](../ssl-bridging/)** – Terminating client-side TLS for Layer 7 inspection, then establishing a separate, independent TLS 1.2 session to backend servers for zero-trust compliance.

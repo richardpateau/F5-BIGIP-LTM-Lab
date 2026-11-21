@@ -185,3 +185,10 @@ Within seconds of stopping NGINX, BIG-IP's active health monitor detected the fa
 2. **Zero Blast Radius:** 100% of incoming and active client requests were automatically steered to `NGINX-WEB02`, preventing client connection resets or HTTP 502/504 Bad Gateway errors.
 
 ---
+
+### What's Next?
+
+With dynamic load balancing and fault tolerance fully validated, the next step is to ensure that stateful applications maintain session continuity for users, even as traffic scales.
+
+Continue to the next task to explore Layer 4 session affinity:
+- **[Task 4: Source Address Persistence & Session Affinity](../source-address-persistence/)** – Implementing IP-based stickiness to guarantee that returning clients are deterministically routed to the same backend server where their session was instantiated.

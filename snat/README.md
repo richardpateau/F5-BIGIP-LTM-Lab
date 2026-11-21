@@ -198,3 +198,10 @@ The raw packet captures supporting this project are preserved in the repository 
 4. **Preserving Client Identity:** Because SNAT masks the original client IP at Layer 3, an HTTP Profile must be configured on the Virtual Server to insert the `X-Forwarded-For` HTTP header, ensuring backend applications and security logging retain true client visibility.
 
 ---
+
+### What's Next?
+
+With cloud routing, SNAT scale-out, and connection multiplexing fully validated, the next step is to protect the application edge from volumetric floods and API abuse.
+
+Continue to the next task to explore multi-layer traffic shaping:
+- **[Task 10: Layer 4 Connection Limiting & Layer 7 Rate Limiting](../http-rate-limiting/)** – Implementing defense-in-depth DoS mitigation using hardware-accelerated TCP resets and sub-millisecond TCL session-table throttling.

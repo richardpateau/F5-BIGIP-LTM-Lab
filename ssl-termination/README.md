@@ -191,3 +191,12 @@ Filtering the identical capture file for the `http` protocol proves that the bac
 1. **CPU Overhead Elimination:** By stripping TLS processing at BIG-IP, backend servers avoid asymmetric mathematical operations (RSA/ECDSA key exchange) and symmetric encryption algorithms (AES-GCM/ChaCha20), yielding higher concurrent request throughput per backend compute instance.
 2. **Layer 7 Inspection Capability:** Operating in termination mode grants BIG-IP full visibility into request headers and paths. This enables fine-grained Layer 7 policy enforcement (URI routing, cookie persistence, bot defense, rate limiting, and WAF inspection) that is impossible under Layer 4 SSL Passthrough.
 3. **Upstream Protocol Awareness:** When offloading SSL, backend web applications see cleartext HTTP requests. To prevent backend services from generating insecure redirect loops (`http://` URLs), production deployments typically configure BIG-IP to inject the `X-Forwarded-Proto: https` and `X-Forwarded-For` HTTP headers into the server-side request flow.
+
+---
+
+### What's Next?
+
+With foundational SSL Termination and Layer 7 URI routing fully validated, the next step is to ensure that traffic is only ever sent to healthy, responsive backend applications. 
+
+Continue to the next task to explore proactive application health checks:
+- **[Task 2: Application Health Monitoring & High-Availability Failover](../http-health-monitoring/)** – Configuring custom Layer 7 HTTP probes to detect application-level failures and dynamically evict unhealthy nodes without dropping active client connections.

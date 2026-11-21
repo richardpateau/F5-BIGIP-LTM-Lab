@@ -1,4 +1,4 @@
-# F5 BIG-IP LTM — Source Address Persistence (Session Affinity)
+# Source Address Persistence (Session Affinity)
 
 ## Summary & Engineering Objective
 
@@ -137,3 +137,12 @@ Total records returned: 2
 1. **The Mega-Proxy / NAT Dilemma:** Because Source Address Persistence binds by IP address, if thousands of corporate users connect through a single corporate forward-proxy or carrier-grade NAT (CGNAT), all users will be pinned to a single backend server, causing severe load imbalance. In web applications with HTTP traffic, **Cookie Persistence** is preferred for this reason.
 2. **Failover Precedence Over Persistence:** If a backend server fails its health check (`MON-NGINX-HTTP`), BIG-IP's health monitor immediately marks the pool member down. BIG-IP's state engine bypasses the persistence record and automatically re-routes subsequent client requests to the remaining healthy server, preventing client outages.
 3. **Subnet Mask Aggregation (`Prefix Length`):** In environments where mobile clients frequently hop cellular towers (changing the last octet of their IP), configuring a `Prefix Length` (e.g. `/24`) groups client subnets into a single persistence entry to preserve session continuity.
+
+---
+
+### What's Next?
+
+With foundational IP-based persistence validated, the next step is to implement a more robust, NAT-resistant session affinity method that operates at Layer 7.
+
+Continue to the next task to explore advanced cookie-based stickiness:
+- **[Task 5: HTTP Cookie Insert Persistence & Packet Telemetry](../cookie-persistence/)** – Engineering hardened, session-scoped HTTP cookies to maintain flawless stateful continuity across complex enterprise proxy and NAT environments.

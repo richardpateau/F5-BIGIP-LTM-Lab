@@ -239,3 +239,10 @@ done
 Both backend servers resumed sharing production traffic evenly, completing the automated self-healing cycle.
 
 ---
+
+### What's Next?
+
+With Layer 7 health monitoring and automated failover fully validated, the next step is to optimize how traffic is distributed among those healthy nodes based on real-time server load rather than static algorithms.
+
+Continue to the next task to explore dynamic load balancing:
+- **[Task 3: Dynamic Load Balancing & Least Connections Algorithm](../least-connections/)** – Configuring adaptive traffic distribution to prevent backend hot-spotting and ensure equitable connection handling under asymmetrical workloads.

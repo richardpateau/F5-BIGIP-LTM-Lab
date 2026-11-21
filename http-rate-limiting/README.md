@@ -345,3 +345,10 @@ The execution telemetry was cross-verified in the BIG-IP Web Configuration Utili
 - **Aborts:** `0`
 
 ---
+
+### What's Next?
+
+With volumetric traffic shaping and rate limiting fully validated, the next step is to enforce granular, application-layer security policies to block malicious reconnaissance and HTTP verb tampering.
+
+Continue to the next task to explore perimeter security controls:
+- **[Task 11: Layer 7 Security Policies & Method Filtering](../security-controls/)** – Engineering Local Traffic Policies to instantly reset connections targeting sensitive URIs (`/admin`) or dangerous HTTP methods (`TRACE`, `CONNECT`) at the TMM kernel edge.
