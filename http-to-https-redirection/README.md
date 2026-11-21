@@ -1,6 +1,6 @@
-# F5 BIG-IP LTM — Automated HTTP-to-HTTPS Redirection via iRules & Wire-Level Analysis
+# Automated HTTP-to-HTTPS Redirection via iRules 
 
-## Executive Summary & Engineering Objectives
+## Summary & Engineering Objectives
 
 This project documents the architectural design, implementation, and packet-level verification of automated **HTTP-to-HTTPS Redirection** on an **F5 BIG-IP Local Traffic Manager (LTM)** deployed in Microsoft Azure.
 
@@ -14,17 +14,6 @@ However, end users and legacy client applications routinely initiate connections
 3. **Dynamic Host & URI Preservation:** Utilize F5 Traffic Management Microkernel (TMM) expansion variables (`[HTTP::host]` and `[HTTP::uri]`) to preserve full directory paths, query parameters, and subdomains dynamically without hardcoding static URLs.
 4. **End-to-End Encryption Traversal:** Validate that client applications following the redirect (`curl -kL`) seamlessly establish an encrypted TLS 1.2 session with the HTTPS Virtual Server (`VS-NGINX-HTTPS`) and reach backend applications.
 5. **Wire-Level Latency Verification:** Empirically analyze packet captures (`redirection.pcap`) in Wireshark to prove microsecond response turnaround and zero backend resource utilization.
-
----
-
-## Technical Comparison: Redirection Implementation Methods
-
-| Redirection Method | Processing Layer | Response Latency | Backend Overhead | URL / Path Flexibility | Browser Caching |
-|---|---|---|---|---|---|
-| **F5 iRule (`HTTP::respond 301`)** *(Implemented)* | ADC / TMM Kernel | **Microseconds (~110 µs)** | **Zero (Terminated at Edge)** | Full dynamic preservation (`[HTTP::host][HTTP::uri]`) | **Permanent (RFC 7231)**; client caches redirect |
-| **F5 Built-in `_sys_https_redirect`** | ADC / TMM Core | Microseconds (~110 µs) | Zero (Terminated at Edge) | Default host/URI preservation | Fixed HTTP 302 (Temporary); repeated round trips |
-| **Backend Web Server (NGINX/Apache)** | Compute Instance | Milliseconds (~10–50 ms) | High (Requires TCP handshake, web worker, logging) | Configurable via server rewrite rules | Dependent on server config (301 or 302) |
-| **DNS / CNAME Redirection** | DNS Resolution | N/A (Protocol blind) | Zero | Cannot modify protocol scheme (`http://` &rarr; `https://`) | N/A |
 
 ---
 

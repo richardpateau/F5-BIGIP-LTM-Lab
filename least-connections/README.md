@@ -122,7 +122,7 @@ In production environments, servers frequently experience external or background
 
 ---
 
-## Phase 4: Real-Time Connection Equilibrium & Teardown Analysis
+## Phase 4: Real-Time Connection & Teardown Analysis
 
 ### 1. Empirical Proof of Connection Equilibrium Under Peak Concurrency
 Navigating to **Statistics &rarr; Module Statistics : Local Traffic &rarr; Pools** while the high-concurrency benchmark was actively running revealed the exact real-time connection distribution:
