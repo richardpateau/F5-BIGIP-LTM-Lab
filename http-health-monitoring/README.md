@@ -239,16 +239,3 @@ done
 Both backend servers resumed sharing production traffic evenly, completing the automated self-healing cycle.
 
 ---
-
-## Production Best Practices & Architectural Takeaways
-
-1. **Layer 7 Content Verification is Crucial:**
-   Layer 3 (ping) and Layer 4 (port check) probes cannot detect application-level deadlock, 500 errors, or database detachment. Always configure Layer 7 HTTP/HTTPS monitors with strict receive strings.
-2. **Proper CRLF Header Delimitation:**
-   When defining HTTP Send Strings, always include explicit trailing CRLFs (`\r\n\r\n`). In HTTP/1.1 Send Strings, always include a `Host:` header (e.g. `GET /health HTTP/1.1\r\nHost: example.local\r\nConnection: Close\r\n\r\n`).
-3. **Dedicated Health Check Endpoints (`/healthz`):**
-   In enterprise production setups, point monitors to dedicated lightweight endpoints (such as `/healthz` or `/status`) that verify backend dependency health (databases, cache, microservices) rather than polling static root HTML files.
-4. **Flapping Mitigation & Up-Interval:**
-   To prevent flapping nodes from repeatedly joining and dropping out of the pool during unstable restarts, configure an `Up-Interval` (a longer probe interval required before declaring a recovered node healthy).
-5. **Zero Client Blast Radius:**
-   By setting timeouts to `(Interval * 3) + 1`, BIG-IP achieves the ideal balance between rapid failover detection (~15 seconds) and immunity against momentary network micro-bursts or packet drops.
