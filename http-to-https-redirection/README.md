@@ -174,9 +174,13 @@ Capture file reference: [redirection.pcap](file:///home/rich/Documents/f5-big-ip
 
 ### Wireshark Filter: `ip.addr == 172.16.0.8 && (http || tls.handshake)`
 
-| Packet List: HTTP Request & Immediate 301 Response | Deep Packet Inspection of Frame 68 (`301 Moved Permanently`) |
-|---|---|
-| ![Wireshark Overview - HTTP and 301](screenshots/wireshark-http-tls.png) | ![Wireshark Frame 68 Details](screenshots/wireshark-301-details.png) |
+**HTTP Request & Immediate 301 Response**
+
+![Wireshark Overview - HTTP and 301](screenshots/wireshark-http-tls.png)
+
+**Deep Packet Inspection of Frame 68 (`301 Moved Permanently`)**
+
+![Wireshark Frame 68 Details](screenshots/wireshark-301-details.png)
 
 ### Wire-Level Telemetry Breakdown:
 
