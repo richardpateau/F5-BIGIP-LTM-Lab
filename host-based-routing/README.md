@@ -26,45 +26,7 @@ To solve this, Layer 7 Host-Based Routing inspects the HTTP `Host:` header sent 
 
 The architecture leverages a single VIP (`172.16.0.7:443`) terminating TLS connections from `F5-CLIENT-01` (`172.16.0.8`). Once the TLS handshake completes, TMM parses the HTTP request headers, matches the `Host:` header, and dispatches the request to the corresponding backend application pool.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client as F5-CLIENT-01 (172.16.0.8)
-    participant F5 as F5 BIG-IP (VS-NGINX-HTTPS 172.16.0.7)
-    participant Pool1 as POOL-APP1-HTTPS (NGINX-WEB01 172.16.0.5)
-    participant Pool2 as POOL-APP2-HTTPS (NGINX-WEB02 172.16.0.6)
-
-    Note over Client,F5: Scenario A: Routing to Application 1
-    Client->>F5: TLS Handshake (SNI: app1.f5-lab.local)
-    F5-->>Client: TLS Established (Certificate Validated)
-    Client->>F5: GET / HTTP/1.1 (Host: app1.f5-lab.local)
-    Note over F5: IRULE-HOST-BASED-ROUTING evaluates [HTTP::host]<br/>Matches "app1.f5-lab.local" -> POOL-APP1-HTTPS
-    F5->>Pool1: HTTPS GET / (Forwarded to 172.16.0.5:443)
-    Pool1-->>F5: HTTP 200 OK (NGINX WEB01 payload)
-    F5-->>Client: HTTP 200 OK (NGINX WEB01 - Backend Server 1)
-
-    Note over Client,F5: Scenario B: Routing to Application 2
-    Client->>F5: GET / HTTP/1.1 (Host: app2.f5-lab.local)
-    Note over F5: IRULE-HOST-BASED-ROUTING evaluates [HTTP::host]<br/>Matches "app2.f5-lab.local" -> POOL-APP2-HTTPS
-    F5->>Pool2: HTTPS GET / (Forwarded to 172.16.0.6:443)
-    Pool2-->>F5: HTTP 200 OK (NGINX WEB02 payload)
-    F5-->>Client: HTTP 200 OK (NGINX WEB02 - Backend Server 2)
-
-    Note over Client,F5: Scenario C: Unknown Hostname Rejection
-    Client->>F5: GET / HTTP/1.1 (Host: unrecognized.domain.com)
-    Note over F5: Host matches "default" condition<br/>HTTP::respond 404 content "Unknown application hostname"
-    F5-->>Client: HTTP/1.1 404 Not Found (Edge synthesized; backend isolated)
-
-    Note over Client,Pool2: Scenario D: Tenant Fault Isolation (WEB01 Stopped)
-    Note over Pool1: Service halted: sudo systemctl stop nginx
-    Note over F5: MON-NGINX-HTTPS marks POOL-APP1-HTTPS OFFLINE
-    Client->>F5: GET / (Host: app1.f5-lab.local)
-    F5-->>Client: Connection reset by peer (Pool offline)
-    Client->>F5: GET / (Host: app2.f5-lab.local)
-    F5->>Pool2: Forwarded to POOL-APP2-HTTPS
-    Pool2-->>F5: HTTP 200 OK
-    F5-->>Client: HTTP 200 OK (Zero blast radius on App 2!)
-```
+![Pool Statistics Showing Web 01 Back Up](screenshots/host-based-draw-io.png)
 
 ### Infrastructure Addressing & Role Matrix
 
