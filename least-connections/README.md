@@ -1,12 +1,12 @@
 # Dynamic Load Balancing: Least Connections Algorithm & Fault Tolerance Testing
 
-## Executive Summary & Engineering Objectives
+## Summary & Engineering Objectives
 
 This project documents the design, empirical stress testing, and failover validation of the **Least Connections** load-balancing algorithm on an **F5 BIG-IP Local Traffic Manager (LTM)** deployed in Microsoft Azure.
 
 In production application environments, backend transactions are rarely uniform. Request execution times vary significantly depending on backend database query complexity, API call latency, payload serialization overhead, and client bandwidth. While static algorithms (such as Round Robin or Ratio) distribute requests in a fixed sequential pattern regardless of backend capacity, **Least Connections** is an adaptive, dynamic load-balancing algorithm that inspects real-time connection state within the BIG-IP **Traffic Management Microkernel (TMM)**. 
 
-When a new connection arrives at the Virtual Server, BIG-IP queries its kernel connection table and directs the request to the pool member currently handling the fewest active concurrent connections. This prevents "hot-spotting"—where a single server becomes saturated by slow or long-lived connections while adjacent servers remain underutilized.
+When a new connection arrives at the Virtual Server, BIG-IP queries its kernel connection table and directs the request to the pool member currently handling the fewest active concurrent connections. This prevents "hot-spotting" where a single server becomes saturated by slow or long-lived connections while adjacent servers remain underutilized.
 
 ### Core Objectives:
 1. **Dynamic Algorithm Configuration:** Provision `POOL-NGINX-WEB` with the **Least Connections (node)** load-balancing method.
@@ -18,37 +18,11 @@ When a new connection arrives at the Virtual Server, BIG-IP queries its kernel c
 
 ---
 
-## Technical Comparison: Static vs. Dynamic Load Balancing
-
-| Algorithm | Type | Decision Basis | Advantages | Disadvantages / Considerations |
-|---|---|---|---|---|
-| **Round Robin** | Static | Sequential cyclic rotation (1 &rarr; 2 &rarr; 1 &rarr; 2) | Negligible CPU overhead; simple to predict | Blind to server load; can overwhelm nodes processing slow transactions |
-| **Ratio (Member / Node)** | Static | Weighted static ratios assigned to nodes | Accommodates hardware capacity differences | Static; cannot adapt to temporary resource bottlenecks |
-| **Least Connections (Node)** *(Implemented)* | Dynamic | Real-time concurrent connections per node IP | Balances aggregate host socket load; prevents host CPU starvation | Evaluates entire node across all ports; sensitive to background host traffic |
-| **Least Connections (Member)** | Dynamic | Real-time concurrent connections per pool member (IP:Port) | Precise per-service socket tracking; isolates port-level contention | Does not account for resource competition from other services on the same host |
-| **Fastest (Node / Application)** | Dynamic | Real-time response time (server ACK / HTTP response) | Steers traffic to lowest-latency nodes | Can cause rapid traffic swinging (thundering herd) to newly responsive nodes |
-
----
-
 ## Architecture & Traffic Flow Topology
 
 The architecture consists of a Linux client (`F5-CLIENT-01`) originating high-concurrency HTTP traffic toward the BIG-IP Virtual Server (`VS-NGINX-WEB`). BIG-IP evaluates active TCP sessions in TMM memory and dynamically balances inbound flows across `NGINX-WEB01` and `NGINX-WEB02`.
 
-```mermaid
-flowchart TD
-    Client["F5-CLIENT-01<br/>172.16.0.8<br/>(wrk Load Generator)"] -->|"High-Concurrency HTTP (TCP/80)"| VIP["VS-NGINX-WEB<br/>172.16.0.7:80<br/>(Virtual Server)"]
-    
-    subgraph F5_LTM ["F5 BIG-IP LTM (TMM Engine)"]
-        VIP --> Engine["Least Connections (node)<br/>Real-Time Kernel Socket Counter"]
-        Engine -->|"Current Conn: 501"| Member1["NGINX-WEB01<br/>172.16.0.5:80"]
-        Engine -->|"Current Conn: 499"| Member2["NGINX-WEB02<br/>172.16.0.6:80"]
-    end
-
-    subgraph Failover_Event ["Fault Injection Event"]
-        Member1 -.->|"sudo systemctl stop nginx<br/>Health Monitor DOWN"| Offline["Marked OFFLINE (Red Diamond)"]
-        Offline -->|"100% Load Diverted"| Member2
-    end
-```
+![Configuring Least Connections on POOL-NGINX-WEB](screenshots/least-connections-draw-io.png)
 
 ### Infrastructure Addressing & Node Roles
 
@@ -142,6 +116,7 @@ In production environments, servers frequently experience external or background
    azureuser@F5-CLIENT-01:~$ wrk -t4 -c500 -d60s http://172.16.0.7
    # 331163 requests in 1.00m (5517.09 req/sec)
    ```
+**Connection Details**
 
 ![High Concurrency and Asymmetrical Load Injection](screenshots/creating-uneven-connections-config.png)
 
