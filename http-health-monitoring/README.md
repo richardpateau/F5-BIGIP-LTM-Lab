@@ -21,23 +21,6 @@ By utilizing Layer 7 health monitoring, F5 BIG-IP's **Traffic Management Microke
 
 ---
 
-## Technical Comparison: Health Monitoring Methodologies
-
-| Monitoring Layer | Protocol / Type | Probe Mechanism | Failure Detection Capabilities | Limitations |
-|---|---|---|---|---|
-| **Layer 3** | ICMP Echo (`gateway_icmp`) | Sends ICMP Echo Request (`ping`) | Host offline, NIC failure, routing outage | Fails to detect web server crashes, port closures, or hung processes |
-| **Layer 4** | TCP Half-Open (`tcp`) | Sends TCP SYN; evaluates SYN-ACK | Web daemon crash, port closed, firewall block | Fails to detect HTTP 500 errors, hung threads, or application logic faults |
-| **Layer 7** | HTTP Monitor (`MON-NGINX-HTTP`) | Sends `GET / HTTP/1.0\r\n\r\n`; inspects payload for `NGINX WEB` | Process death, HTTP 5xx errors, application freezes, corrupt payloads | Minor overhead of sending HTTP requests every 5 seconds per node |
-
-### Health Monitor Timing Formula:
-F5 networks best practices dictate setting the monitor timeout using the formula:
-$$\text{Timeout} = (\text{Interval} \times 3) + 1$$
-For this lab:
-$$\text{Timeout} = (5 \times 3) + 1 = 16 \text{ seconds}$$
-This guarantees that an unhealthy member is evicted only after failing **three consecutive probe cycles**, preventing false-positive evictions from momentary network jitter while enforcing eviction within ~15–16 seconds of genuine failure.
-
----
-
 ## Architecture & Traffic Flow Topology
 
 The lab topology consists of a dedicated Linux client (`F5-CLIENT-01`) targeting the Virtual Server VIP (`VS-NGINX-WEB`). In the backend, F5 BIG-IP dispatches periodic Layer 7 probes across the internal network to both `NGINX-WEB01` and `NGINX-WEB02`.
